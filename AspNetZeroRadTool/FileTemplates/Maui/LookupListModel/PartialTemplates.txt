@@ -1,0 +1,10 @@
+﻿{
+"propertyTemplates":[
+	],
+"navigationPropertyTemplates":[
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+	]
+}

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <RootNamespace>HodHod</RootNamespace>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Flurl" Version="4.0.0" />
+    <PackageReference Include="Flurl.Http" Version="4.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HodHod.Application.Shared\HodHod.Application.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="NETStandard.Library" Version="2.0.3" />
+  </ItemGroup>
+</Project>

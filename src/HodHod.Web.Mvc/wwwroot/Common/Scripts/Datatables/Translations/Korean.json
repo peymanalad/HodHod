@@ -1,0 +1,25 @@
+﻿
+
+{
+   "sEmptyTable":     "ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤",
+   "sInfo":           "_START_ - _END_ / _TOTAL_",
+   "sInfoEmpty":      "0 - 0 / 0",
+   "sInfoFiltered":   "(ì´ _MAX_ ê°œ)",
+   "sInfoPostFix":    "",
+   "sInfoThousands":  ",",
+   "sLengthMenu":     "íŽ˜ì´ì§€ë‹¹ ì¤„ìˆ˜ _MENU_",
+   "sLoadingRecords": "ì½ëŠ”ì¤‘...",
+   "sProcessing":     "ì²˜ë¦¬ì¤‘...",
+   "sSearch":         "ê²€ìƒ‰:",
+   "sZeroRecords":    "ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ìŠµë‹ˆë‹¤",
+   "oPaginate": {
+       "sFirst":    "ì²˜ìŒ",
+       "sLast":     "ë§ˆì§€ë§‰",
+       "sNext":     "ë‹¤ìŒ",
+       "sPrevious": "ì´ì „"
+   },
+   "oAria": {
+       "sSortAscending":  ": ì˜¤ë¦„ì°¨ìˆœ ì •ë ¬",
+       "sSortDescending": ": ë‚´ë¦¼ì°¨ìˆœ ì •ë ¬"
+   }
+}

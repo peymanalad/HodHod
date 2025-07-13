@@ -1,0 +1,4 @@
+﻿Get-ChildItem -Path . -Filter *.json -Recurse | ForEach-Object {
+   $content = Get-Content $_.FullName -Raw
+   [System.IO.File]::WriteAllText($_.FullName, $content, (New-Object System.Text.UTF8Encoding -ArgumentList $False))
+}

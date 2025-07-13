@@ -1,0 +1,24 @@
+﻿
+{
+	"sEmptyTable":     "Nie sÃº k dispozÃ­cii Å¾iadne dÃ¡ta",
+	"sInfo":           "ZÃ¡znamy _START_ aÅ¾ _END_ z celkom _TOTAL_",
+	"sInfoEmpty":      "ZÃ¡znamy 0 aÅ¾ 0 z celkom 0 ",
+	"sInfoFiltered":   "(vyfiltrovanÃ© spomedzi _MAX_ zÃ¡znamov)",
+	"sInfoPostFix":    "",
+  	"sInfoThousands":  ",",
+	"sLengthMenu":     "Zobraz _MENU_ zÃ¡znamov",
+	"sLoadingRecords": "NaÄÃ­tavam...",
+	"sProcessing":     "SpracÃºvam...",
+	"sSearch":         "HÄ¾adaÅ¥:",
+	"sZeroRecords":    "NenaÅ¡li sa Å¾iadne vyhovujÃºce zÃ¡znamy",
+	"oPaginate": {
+		"sFirst":    "PrvÃ¡",
+		"sLast":     "PoslednÃ¡",
+		"sNext":     "NasledujÃºca",
+		"sPrevious": "PredchÃ¡dzajÃºca"
+	},
+	"oAria": {
+		"sSortAscending":  ": aktivujte na zoradenie stÄºpca vzostupne",
+		"sSortDescending": ": aktivujte na zoradenie stÄºpca zostupne"
+	}
+}

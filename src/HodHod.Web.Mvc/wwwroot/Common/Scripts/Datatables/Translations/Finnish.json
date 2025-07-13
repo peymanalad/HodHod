@@ -1,0 +1,41 @@
+﻿
+
+{
+	"sEmptyTable":   "Ei nÃ¤ytettÃ¤viÃ¤ tuloksia.",
+	"sInfo":         "NÃ¤ytetÃ¤Ã¤n rivit _START_ - _END_ (yhteensÃ¤ _TOTAL_ )",
+	"sInfoEmpty":    "NÃ¤ytetÃ¤Ã¤n 0 - 0 (yhteensÃ¤ 0)",
+	"sInfoFiltered": "(suodatettu _MAX_ tuloksen joukosta)",
+	"sInfoPostFix":  "",
+	"sLengthMenu":   "NÃ¤ytÃ¤ kerralla _MENU_ riviÃ¤",
+	"sLoadingRecords": "Ladataan...", 
+	"sProcessing":   "Hetkinen...",
+	"sSearch":       "Etsi:",
+	"sZeroRecords":  "Tietoja ei lÃ¶ytynyt",
+	"oPaginate": {
+		"sFirst":    "EnsimmÃ¤inen",
+		"sLast":     "Viimeinen",
+		"sNext":     "Seuraava",
+		"sPrevious": "Edellinen"
+	},
+	"oAria": {
+		"sSortAscending":  ": lajittele sarake nousevasti",
+		"sSortDescending": ": lajittele sarake laskevasti"
+	},
+	"select": {
+		"rows": {
+			"_": "Valittuna %d riviÃ¤",
+			"0": "Klikkaa riviÃ¤ valitaksesi sen",
+			"1": "Valittuna vain yksi rivi"
+		}
+	},
+	"buttons": {
+		"copy": "Kopioi",
+		"copySuccess": {
+			"1": "Yksi rivi kopioitu leikepÃ¶ydÃ¤lle",
+			"_": "%d riviÃ¤ kopioitu leikepÃ¶ydÃ¤lle"
+		},
+		"copyTitle": "Kopioi leikepÃ¶ydÃ¤lle",
+		"copyKeys": "Paina <i>ctrl</i> tai <i>\u2318</i> + <i>C</i> kopioidaksesi taulukon arvot<br>jÃ¤rjestelmÃ¤si leikepÃ¶ydÃ¤lle. <br><br>Peruuttaaksesi paina tÃ¤tÃ¤ viestiÃ¤ tai Esc."
+	}
+}
+}

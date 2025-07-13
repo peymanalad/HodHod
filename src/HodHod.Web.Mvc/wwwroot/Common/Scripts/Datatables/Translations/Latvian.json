@@ -1,0 +1,24 @@
+﻿
+
+{
+	"processing": "Uzgaidiet...",
+	"search": "MeklÄ“t:",
+	"lengthMenu": "RÄdÄ«t _MENU_ ierakstus",
+	"info": "ParÄdÄ«ti _START_. lÄ«dz _END_. no _TOTAL_ ierakstiem",
+	"infoEmpty": "Nav ierakstu",
+	"infoFiltered": "(atlasÄ«ts no pavisam _MAX_ ierakstiem)",
+	"infoPostFix": "",
+	"loadingRecords": "IekrauÅ¡anas ieraksti ...",
+	"zeroRecords": "Nav atrasti vaicÄjumam atbilstoÅ¡i ieraksti",
+	"emptyTable:": "Tabula nav datu",
+	"paginate": {
+		"first": "PirmÄ",
+		"previous": "IepriekÅ¡Ä“jÄ",
+		"next": "NÄkoÅ¡Ä",
+		"last": "PÄ“dÄ“jÄ"
+	},
+	"aria": {
+		"sortAscending": ": aktivizÄ“t kolonnu, lai kÄrtotu augoÅ¡Ä",
+		"sortDescending": ": aktivizÄ“t kolonnu, lai kÄrtotu dilstoÅ¡Ä"
+	}
+}

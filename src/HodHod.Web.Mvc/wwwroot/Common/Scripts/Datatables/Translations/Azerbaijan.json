@@ -1,0 +1,25 @@
+﻿
+
+{
+	"sEmptyTable":     "CÉ™dvÉ™ldÉ™ heÃ§ bir mÉ™lumat yoxdur",
+	"sInfo":           " _TOTAL_ NÉ™ticÉ™dÉ™n _START_ - _END_ ArasÄ± NÉ™ticÉ™lÉ™r",
+	"sInfoEmpty":      "NÉ™ticÉ™ Yoxdur",
+	"sInfoFiltered":   "( _MAX_ NÉ™ticÉ™ Ä°Ã§indÉ™n TapÄ±lanlar)",
+	"sInfoPostFix":    "",
+	"sInfoThousands":  ",",
+	"sLengthMenu":     "SÉ™hifÉ™dÉ™ _MENU_ NÉ™ticÉ™ GÃ¶stÉ™r",
+	"sLoadingRecords": "YÃ¼klÉ™nir...",
+	"sProcessing":     "GÃ¶zlÉ™yin...",
+	"sSearch":         "AxtarÄ±ÅŸ:",
+	"sZeroRecords":    "NÉ™ticÉ™ TapÄ±lmadÄ±.",
+	"oPaginate": {
+		"sFirst":    "Ä°lk",
+		"sLast":     "AxÄ±rÄ±ncÄ±",
+		"sNext":     "Sonraki",
+		"sPrevious": "Ã–ncÉ™ki"
+	},
+	"oAria": {
+		"sSortAscending":  ": sÃ¼tunu artma sÄ±rasÄ± Ã¼zÉ™rÉ™ aktiv etmÉ™k",
+		"sSortDescending": ": sÃ¼tunu azalma sÄ±rasÄ± Ã¼zÉ™rÉ™ aktiv etmÉ™k"
+	}
+}

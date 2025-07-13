@@ -1,0 +1,25 @@
+﻿
+
+{
+	"sEmptyTable":     "Engin gÃ¶gn eru Ã­ Ã¾essari tÃ¶flu",
+	"sInfo":           "SÃ½ni _START_ til _END_ af _TOTAL_ fÃ¦rslum",
+	"sInfoEmpty":      "SÃ½ni 0 til 0 af 0 fÃ¦rslum",
+	"sInfoFiltered":   "(sÃ­aÃ° Ãºt frÃ¡ _MAX_ fÃ¦rslum)",
+	"sInfoPostFix":    "",
+	"sInfoThousands":  ".",
+	"sLengthMenu":     "SÃ½na _MENU_ fÃ¦rslur",
+	"sLoadingRecords": "HleÃ°...",
+	"sProcessing":     "Ãšrvinnsla...",
+	"sSearch":         "Leita:",
+	"sZeroRecords":    "Engar fÃ¦rslur fundust",
+	"oPaginate": {
+		"sFirst":    "Fyrsta",
+		"sLast":     "SÃ­Ã°asta",
+		"sNext":     "NÃ¦sta",
+		"sPrevious": "Fyrri"
+	},
+	"oAria": {
+		"sSortAscending":  ": virkja til aÃ° raÃ°a dÃ¡lki Ã­ hÃ¦kkandi rÃ¶Ã°",
+		"sSortDescending": ": virkja til aÃ° raÃ°a dÃ¡lki lÃ¦kkandi Ã­ rÃ¶Ã°"
+	}
+}

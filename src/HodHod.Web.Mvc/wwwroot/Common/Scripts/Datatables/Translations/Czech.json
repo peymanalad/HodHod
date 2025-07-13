@@ -1,0 +1,25 @@
+﻿
+
+{
+	"sEmptyTable":     "Tabulka neobsahuje Å¾Ã¡dnÃ¡ data",
+	"sInfo":           "Zobrazuji _START_ aÅ¾ _END_ z celkem _TOTAL_ zÃ¡znamÅ¯",
+	"sInfoEmpty":      "Zobrazuji 0 aÅ¾ 0 z 0 zÃ¡znamÅ¯",
+	"sInfoFiltered":   "(filtrovÃ¡no z celkem _MAX_ zÃ¡znamÅ¯)",
+	"sInfoPostFix":    "",
+	"sInfoThousands":  " ",
+	"sLengthMenu":     "Zobraz zÃ¡znamÅ¯ _MENU_",
+	"sLoadingRecords": "NaÄÃ­tÃ¡m...",
+	"sProcessing":     "ProvÃ¡dÃ­m...",
+	"sSearch":         "Hledat:",
+	"sZeroRecords":    "Å½Ã¡dnÃ© zÃ¡znamy nebyly nalezeny",
+	"oPaginate": {
+		"sFirst":    "PrvnÃ­",
+		"sLast":     "PoslednÃ­",
+		"sNext":     "DalÅ¡Ã­",
+		"sPrevious": "PÅ™edchozÃ­"
+	},
+	"oAria": {
+		"sSortAscending":  ": aktivujte pro Å™azenÃ­ sloupce vzestupnÄ›",
+		"sSortDescending": ": aktivujte pro Å™azenÃ­ sloupce sestupnÄ›"
+	}
+}

@@ -1,0 +1,26 @@
+﻿
+
+{
+	"sProcessing":   "å¤„ç†ä¸­...",
+	"sLengthMenu":   "æ˜¾ç¤º _MENU_ é¡¹ç»“æžœ",
+	"sZeroRecords":  "æ²¡æœ‰åŒ¹é…ç»“æžœ",
+	"sInfo":         "æ˜¾ç¤ºç¬¬ _START_ è‡³ _END_ é¡¹ç»“æžœï¼Œå…± _TOTAL_ é¡¹",
+	"sInfoEmpty":    "æ˜¾ç¤ºç¬¬ 0 è‡³ 0 é¡¹ç»“æžœï¼Œå…± 0 é¡¹",
+	"sInfoFiltered": "(ç”± _MAX_ é¡¹ç»“æžœè¿‡æ»¤)",
+	"sInfoPostFix":  "",
+	"sSearch":       "æœç´¢:",
+	"sUrl":          "",
+	"sEmptyTable":     "è¡¨ä¸­æ•°æ®ä¸ºç©º",
+	"sLoadingRecords": "è½½å…¥ä¸­...",
+	"sInfoThousands":  ",",
+	"oPaginate": {
+		"sFirst":    "é¦–é¡µ",
+		"sPrevious": "ä¸Šé¡µ",
+		"sNext":     "ä¸‹é¡µ",
+		"sLast":     "æœ«é¡µ"
+	},
+	"oAria": {
+		"sSortAscending":  ": ä»¥å‡åºæŽ’åˆ—æ­¤åˆ—",
+		"sSortDescending": ": ä»¥é™åºæŽ’åˆ—æ­¤åˆ—"
+	}
+}

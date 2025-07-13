@@ -1,0 +1,19 @@
+﻿
+
+{
+	"sProcessing":   "ProceseazÄƒ...",
+	"sLengthMenu":   "AfiÈ™eazÄƒ _MENU_ Ã®nregistrÄƒri pe paginÄƒ",
+	"sZeroRecords":  "Nu am gÄƒsit nimic - ne pare rÄƒu",
+	"sInfo":         "AfiÈ™ate de la _START_ la _END_ din _TOTAL_ Ã®nregistrÄƒri",
+	"sInfoEmpty":    "AfiÈ™ate de la 0 la 0 din 0 Ã®nregistrÄƒri",
+	"sInfoFiltered": "(filtrate dintr-un total de _MAX_ Ã®nregistrÄƒri)",
+	"sInfoPostFix":  "",
+	"sSearch":       "CautÄƒ:",
+	"sUrl":          "",
+	"oPaginate": {
+		"sFirst":    "Prima",
+		"sPrevious": "Precedenta",
+		"sNext":     "UrmÄƒtoarea",
+		"sLast":     "Ultima"
+	}
+}

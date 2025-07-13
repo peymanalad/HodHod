@@ -1,0 +1,19 @@
+﻿
+
+{
+	"sProcessing":   "Äang xá»­ lÃ½...",
+	"sLengthMenu":   "Xem _MENU_ má»¥c",
+	"sZeroRecords":  "KhÃ´ng tÃ¬m tháº¥y dÃ²ng nÃ o phÃ¹ há»£p",
+	"sInfo":         "Äang xem _START_ Ä‘áº¿n _END_ trong tá»•ng sá»‘ _TOTAL_ má»¥c",
+	"sInfoEmpty":    "Äang xem 0 Ä‘áº¿n 0 trong tá»•ng sá»‘ 0 má»¥c",
+	"sInfoFiltered": "(Ä‘Æ°á»£c lá»c tá»« _MAX_ má»¥c)",
+	"sInfoPostFix":  "",
+	"sSearch":       "TÃ¬m:",
+	"sUrl":          "",
+	"oPaginate": {
+		"sFirst":    "Äáº§u",
+		"sPrevious": "TrÆ°á»›c",
+		"sNext":     "Tiáº¿p",
+		"sLast":     "Cuá»‘i"
+	}
+}

@@ -1,0 +1,25 @@
+﻿
+
+{
+   "sEmptyTable":     "Nincs rendelkezÃ©sre Ã¡llÃ³ adat",
+   "sInfo":           "TalÃ¡latok: _START_ - _END_ Ã–sszesen: _TOTAL_",
+   "sInfoEmpty":      "Nulla talÃ¡lat",
+   "sInfoFiltered":   "(_MAX_ Ã¶sszes rekord kÃ¶zÃ¼l szÅ±rve)",
+   "sInfoPostFix":    "",
+   "sInfoThousands":  " ",
+   "sLengthMenu":     "_MENU_ talÃ¡lat oldalankÃ©nt",
+   "sLoadingRecords": "BetÃ¶ltÃ©s...",
+   "sProcessing":     "FeldolgozÃ¡s...",
+   "sSearch":         "KeresÃ©s:",
+   "sZeroRecords":    "Nincs a keresÃ©snek megfelelÅ‘ talÃ¡lat",
+   "oPaginate": {
+       "sFirst":    "ElsÅ‘",
+       "sPrevious": "ElÅ‘zÅ‘",
+       "sNext":     "KÃ¶vetkezÅ‘",
+       "sLast":     "UtolsÃ³"
+   },
+   "oAria": {
+       "sSortAscending":  ": aktivÃ¡lja a nÃ¶vekvÅ‘ rendezÃ©shez",
+       "sSortDescending": ": aktivÃ¡lja a csÃ¶kkenÅ‘ rendezÃ©shez"
+   }
+}

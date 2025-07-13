@@ -1,0 +1,24 @@
+﻿
+
+{
+	"processing":     "Przetwarzanie...",
+	"search":         "Szukaj:",
+	"lengthMenu":     "PokaÅ¼ _MENU_ pozycji",
+	"info":           "Pozycje od _START_ do _END_ z _TOTAL_ Å‚Ä…cznie",
+	"infoEmpty":      "Pozycji 0 z 0 dostÄ™pnych",
+	"infoFiltered":   "(filtrowanie spoÅ›rÃ³d _MAX_ dostÄ™pnych pozycji)",
+	"infoPostFix":    "",
+	"loadingRecords": "Wczytywanie...",
+	"zeroRecords":    "Nie znaleziono pasujÄ…cych pozycji",
+	"emptyTable":     "Brak danych",
+	"paginate": {
+		"first":      "Pierwsza",
+		"previous":   "Poprzednia",
+		"next":       "NastÄ™pna",
+		"last":       "Ostatnia"
+	},
+	"aria": {
+		"sortAscending": ": aktywuj, by posortowaÄ‡ kolumnÄ™ rosnÄ…co",
+		"sortDescending": ": aktywuj, by posortowaÄ‡ kolumnÄ™ malejÄ…co"
+	}
+}

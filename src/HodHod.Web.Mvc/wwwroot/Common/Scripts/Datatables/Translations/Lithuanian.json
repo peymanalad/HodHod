@@ -1,0 +1,24 @@
+﻿
+
+{
+    "sEmptyTable":      "LentelÄ—je nÄ—ra duomenÅ³",
+    "sInfo":            "Rodomi Ä¯raÅ¡ai nuo _START_ iki _END_ iÅ¡ _TOTAL_ Ä¯raÅ¡Å³",
+    "sInfoEmpty":       "Rodomi Ä¯raÅ¡ai nuo 0 iki 0 iÅ¡ 0",
+    "sInfoFiltered":    "(atrinkta iÅ¡ _MAX_ Ä¯raÅ¡Å³)",
+    "sInfoPostFix":     "",
+    "sInfoThousands":   " ",
+    "sLengthMenu":      "Rodyti _MENU_ Ä¯raÅ¡us",
+    "sLoadingRecords":  "Ä®keliama...",
+    "sProcessing":      "Apdorojama...",
+    "sSearch":          "IeÅ¡koti:",
+    "sThousands":       " ",
+    "sUrl":             "",
+    "sZeroRecords":     "Ä®raÅ¡Å³ nerasta",
+
+    "oPaginate": {
+        "sFirst": "Pirmas",
+        "sPrevious": "Ankstesnis",
+        "sNext": "Tolimesnis",
+        "sLast": "Paskutinis"
+    }
+}
