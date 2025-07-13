@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DC_IMAGE_NAME}:${DC_IMAGE_TAG}
+    container_name: hodhod-backend_app_${DC_DEPLOY_ENV}
+    ports:
+      - ${DC_APP_PORT}:80
+#      - "8080:80"
+#      - "4403:443"
+#      - "4404:22"
+    networks:
+      - hodhod-backend-app-network
+    restart: always
+    environment:
+      ConnectionStrings__Default: ${DB_CONNECTION_STRING}
+      PRIVATE_KEY_PATH: "/var/dockers/deed/private_key.pem"
+      KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
+    volumes:
+      - /var/dockers/deed/BinaryObjects:/App/BinaryObjects
+      - /var/dockers/deed/private_key.pem:/var/dockers/deed/private_key.pem:ro
+      - /var/dockers/deed/wwwroot:/App/wwwroot
+      - /var/dockers/deed/wwwroot/thumbnails:/App/wwwroot/thumbnails
+      - /var/dockers/deed/wwwroot/previews:/App/wwwroot/previews
+      - /var/dockers/deed/wwwroot/Plugins:/App/wwwroot/Plugins
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  mssql:
+    image: microsoft.repo.stinascloud.ir/mssql/server:2022-latest
+    container_name: hodhod-mssql_${DC_DEPLOY_ENV}
+    ports:
+      - "1433:1433"
+    networks:
+      - hodhod-backend-app-network
+    restart: always
+    user: root
+    volumes:
+      - ./data:/var/opt/mssql/data
+      - ./log:/var/opt/mssql/log
+      - ./secrets:/var/opt/mssql/secrets
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=testtest
+      - MSSQL_PID=developer
+      - MSSQL_TCP_PORT=1433
+
+networks:
+  hodhod-backend-app-network:
+    driver: bridge
