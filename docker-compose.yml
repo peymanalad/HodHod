@@ -17,13 +17,6 @@ services:
       ConnectionStrings__Default: ${DB_CONNECTION_STRING}
       PRIVATE_KEY_PATH: "/var/dockers/deed/private_key.pem"
       KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
-    volumes:
-      - /var/dockers/deed/BinaryObjects:/App/BinaryObjects
-      - /var/dockers/deed/private_key.pem:/var/dockers/deed/private_key.pem:ro
-      - /var/dockers/deed/wwwroot:/App/wwwroot
-      - /var/dockers/deed/wwwroot/thumbnails:/App/wwwroot/thumbnails
-      - /var/dockers/deed/wwwroot/previews:/App/wwwroot/previews
-      - /var/dockers/deed/wwwroot/Plugins:/App/wwwroot/Plugins
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
