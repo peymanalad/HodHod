@@ -15,7 +15,7 @@ namespace HodHod.FileUploads;
 public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 {
     private const int MaxFileCount = 5;
-    private const long MaxFileSize = 200 * 1024 * 1024; //20 MB
+    private const long MaxFileSize = 3145728000; //20 MB
 
     private static readonly HashSet<string> AllowedExtensions = new()
     {

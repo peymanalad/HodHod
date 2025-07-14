@@ -17,7 +17,7 @@ public class Program
             .UseKestrel(opt =>
             {
                 opt.AddServerHeader = false;
-                opt.Limits.MaxRequestLineSize = 16 * 1024;
+                opt.Limits.MaxRequestLineSize = 16 * 1024 * 10024;
             })
             .UseContentRoot(Directory.GetCurrentDirectory())
             .ConfigureLogging((context, logging) =>
