@@ -37,14 +37,11 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITempFileCacheManager _tempFileCacheManager;
-    private readonly IFileValidatorManager _fileValidatorManager;
 
-    public FileUploadAppService(IHttpContextAccessor httpContextAccessor, ITempFileCacheManager tempFileCacheManager,
-        IFileValidatorManager fileValidatorManager)
+    public FileUploadAppService(IHttpContextAccessor httpContextAccessor, ITempFileCacheManager tempFileCacheManager)
     {
         _httpContextAccessor = httpContextAccessor;
         _tempFileCacheManager = tempFileCacheManager;
-        _fileValidatorManager = fileValidatorManager;
     }
 
     public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles()
@@ -59,15 +56,6 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
         foreach (var file in files)
         {
-
-            // Validate the uploaded file to ensure it meets the allowed file type and signature requirements.
-            var validationResult = _fileValidatorManager.ValidateAll(new FileValidateInput(file));
-
-            if (!validationResult.Success)
-            {
-                throw new UserFriendlyException($"Validation failed: {validationResult.Message}");
-            }
-
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(ext))
             {
