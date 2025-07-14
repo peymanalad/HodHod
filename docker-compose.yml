@@ -6,14 +6,12 @@ services:
     image: ${DC_IMAGE_NAME}:${DC_IMAGE_TAG}
     container_name: hodhod-backend_app_${DC_DEPLOY_ENV}
     ports:
-      - ${DC_APP_PORT}:80
+      - "${DC_APP_PORT}:80"
     networks:
       - hodhod-backend-app-network
     restart: always
-    environment:
-      ConnectionStrings__Default: ${DB_CONNECTION_STRING}
-      PRIVATE_KEY_PATH: "/var/dockers/deed/private_key.pem"
-      KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
+    env_file:
+      - ./.env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
