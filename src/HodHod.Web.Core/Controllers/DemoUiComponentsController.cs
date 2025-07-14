@@ -38,7 +38,7 @@ public class DemoUiComponentsController : HodHodControllerBase
 
             foreach (var file in files)
             {
-                if (file.Length > 1048576) //1MB
+                if (file.Length > 31457280) //1MB
                 {
                     throw new UserFriendlyException(L("File_SizeLimit_Error"));
                 }

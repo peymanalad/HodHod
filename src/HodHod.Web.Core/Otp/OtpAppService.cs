@@ -72,7 +72,8 @@ public class OtpAppService : HodHodAppServiceBase, IOtpAppService
         var now = Clock.Now;
         if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 200)
         {
-            throw new UserFriendlyException(L("OtpSendLimitExceeded"));
+            //throw new UserFriendlyException(L("OtpSendLimitExceeded"));
+            throw new UserFriendlyException(L("تعداد دفعات ارسال کد زیاد شده است. لطفاً کمی صبر کرده و دوباره تلاش کنید."));
         }
 
         if (limiter == null || limiter.WindowStart.AddHours(1) <= now)

@@ -15,7 +15,7 @@ namespace HodHod.FileUploads;
 public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 {
     private const int MaxFileCount = 5;
-    private const long MaxFileSize = 20 * 1024 * 1024; //20 MB
+    private const long MaxFileSize = 200 * 1024 * 1024; //20 MB
 
     private static readonly HashSet<string> AllowedExtensions = new()
     {
@@ -38,13 +38,13 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         var files = _httpContextAccessor.HttpContext?.Request?.Form?.Files;
         if (files == null || files.Count == 0)
         {
-            throw new UserFriendlyException(L("File_Empty_Error"));
+            throw new UserFriendlyException(L("فایلی برای ارسال انتخاب نشده! لطفا\u064b ابتدا یک فایل انتخاب کنید."));
         }
 
         if (files.Count > MaxFileCount)
         {
             //throw new UserFriendlyException("Too many files uploaded. Max is " + MaxFileCount);
-            throw new UserFriendlyException("فایل انتخاب\u200cشده خیلی بزرگ است! حداکثر مجاز: {20} مگابایت.");
+            throw new UserFriendlyException("شما فقط می\u200cتوانید تا {5} فایل بارگذاری کنید. لطفا\u064b تعداد فایل\u200cها را کاهش دهید.");
         }
 
         var outputs = new List<UploadFileOutput>();
@@ -53,7 +53,9 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         {
             if (file.Length > MaxFileSize)
             {
-                throw new UserFriendlyException(L("File_SizeLimit_Error"));
+                //throw new UserFriendlyException(L("File_SizeLimit_Error"));
+                throw new UserFriendlyException(L("فایل انتخاب\u200cشده خیلی بزرگ است! حداکثر مجاز: {20} مگابایت."));
+
             }
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
