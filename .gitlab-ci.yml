@@ -72,7 +72,7 @@ build_and_push_image:
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      docker-compose.yml up -d "
+      docker -f docker-compose.yml up -d "
 #      ./update.sh $DEPLOY_ENV docker-compose.yml "
   environment:
     name: $DEPLOY_ENV
