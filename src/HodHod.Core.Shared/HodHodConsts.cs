@@ -7,7 +7,7 @@ public class HodHodConsts
     /// <summary>
     /// Name of the product if the app itself is sold as a SAAS product.
     /// </summary>
-    public const string ProductName = "HodHod";
+    public const string ProductName = "هدهد";
 
     public const string ConnectionStringName = "Default";
 

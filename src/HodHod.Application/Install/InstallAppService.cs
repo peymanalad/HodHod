@@ -22,8 +22,6 @@ using HodHod.Configuration.Host.Dto;
 using HodHod.EntityFrameworkCore;
 using HodHod.Identity;
 using HodHod.Install.Dto;
-using HodHod.Migrations.Seed;
-using HodHod.Migrations.Seed.Host;
 
 
 namespace HodHod.Install;
@@ -63,8 +61,6 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
 
         SetConnectionString(input.ConnectionString);
 
-        _migrator.CreateOrMigrateForHost(SeedHelper.SeedHostDb);
-
         if (CheckDatabaseInternal())
         {
             await SetAdminPassword(input.AdminPassword);
@@ -84,16 +80,16 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
     {
         var appUrl = _appConfiguration.GetSection("App");
 
-        if (appUrl["WebSiteRootAddress"].IsNullOrEmpty())
-        {
-            return new AppSettingsJsonDto
-            {
-                WebSiteUrl = appUrl["ClientRootAddress"],
-                ServerSiteUrl = appUrl["ServerRootAddress"],
-                Languages = DefaultLanguagesCreator.InitialLanguages
-                    .Select(l => new NameValue(l.DisplayName, l.Name)).ToList()
-            };
-        }
+        //if (appUrl["WebSiteRootAddress"].IsNullOrEmpty())
+        //{
+        //    return new AppSettingsJsonDto
+        //    {
+        //        WebSiteUrl = appUrl["ClientRootAddress"],
+        //        ServerSiteUrl = appUrl["ServerRootAddress"],
+        //        Languages = DefaultLanguagesCreator.InitialLanguages
+        //            .Select(l => new NameValue(l.DisplayName, l.Name)).ToList()
+        //    };
+        //}
 
         return new AppSettingsJsonDto
         {

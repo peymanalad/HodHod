@@ -1,4 +1,5 @@
-﻿using Abp.AspNetZeroCore;
+﻿using System;
+using Abp.AspNetZeroCore;
 using Abp.Events.Bus;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
@@ -27,9 +28,16 @@ public class HodHodMigratorModule : AbpModule
 
     public override void PreInitialize()
     {
-        Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-            HodHodConsts.ConnectionStringName
-            );
+        //Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+        //    HodHodConsts.ConnectionStringName
+        //    );
+        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        if (string.IsNullOrEmpty(envConnection))
+        {
+            envConnection = _appConfiguration.GetConnectionString(
+                HodHodConsts.ConnectionStringName);
+        }
+        Configuration.DefaultNameOrConnectionString = envConnection;
         Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
 
         Configuration.BackgroundJobs.IsJobExecutionEnabled = false;

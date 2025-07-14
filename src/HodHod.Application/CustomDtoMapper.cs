@@ -1,4 +1,5 @@
-﻿using Abp.Application.Editions;
+﻿using System.Linq;
+using Abp.Application.Editions;
 using Abp.Application.Features;
 using Abp.Auditing;
 using Abp.Authorization;
@@ -46,6 +47,8 @@ using HodHod.Sessions.Dto;
 using HodHod.WebHooks.Dto;
 using HodHod.Categories;
 using HodHod.Categories.Dto;
+using HodHod.Reports;
+using HodHod.Reports.Dto;
 
 namespace HodHod;
 
@@ -185,7 +188,10 @@ internal static class CustomDtoMapper
         configuration.CreateMap<UpdateCategoryDto, Category>();
         configuration.CreateMap<CreateSubCategoryDto, SubCategory>();
         configuration.CreateMap<UpdateSubCategoryDto, SubCategory>();
-
+        configuration.CreateMap<Report, ReportDto>()
+            .ForMember(d => d.FilePaths, opt 
+                => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()));
+        configuration.CreateMap<CreateReportDto, Report>();
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }

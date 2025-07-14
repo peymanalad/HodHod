@@ -1285,7 +1285,7 @@
     <text name="PasswordlessCode_Title">Your one-time code has been generated</text>
     <text name="PasswordlessCode_Description">You’re receiving this email because you requested to login your account without using a password. Copy and paste this code in the appropriate field in the application:</text>
     <text name="PasswordlessCode_ExpirationDescription">Your code is valid for {0} minutes, but you can use it only once. If you request a new code, this one will stop working.</text>
-    <text name="PasswordlessLogin_SmsMessage">Your {0} login code is {1}</text>
+    <text name="PasswordlessLogin_SmsMessage">{1}</text>
     <text name="CustomLogo_TypeError">You can only upload JPEG, PNG, and GIF files.</text>
     <text name="CustomLogo_SizeLimitError">The file size should not exceed 100KB.</text>
     <text name="CustomLogo_DimensionError">The image dimensions should not exceed {0}x{1} pixels.</text>

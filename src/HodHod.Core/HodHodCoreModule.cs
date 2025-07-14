@@ -105,7 +105,7 @@ public class HodHodCoreModule : AbpModule
         //Configuration.ReplaceService<ISmsSender,TwilioSmsSender>();
 
         //Kavenegar SMS integration
-        //Configuration.ReplaceService<ISmsSender, KavenegarSmsSender>(DependencyLifeStyle.Transient);
+        Configuration.ReplaceService<ISmsSender, KavenegarSmsSender>(DependencyLifeStyle.Transient);
 
         //Adding DynamicEntityParameters definition providers
         Configuration.DynamicEntityProperties.Providers.Add<AppDynamicEntityPropertyDefinitionProvider>();
@@ -185,6 +185,11 @@ public class HodHodCoreModule : AbpModule
         Configuration.Caching.Configure(QrLoginSessionIdCacheItem.CacheName, cache =>
         {
             cache.DefaultSlidingExpireTime = QrLoginSessionIdCacheItem.DefaultSlidingExpireTime;
+        });
+
+        Configuration.Caching.Configure(OtpSendLimitCacheItem.CacheName, cache =>
+        {
+            cache.DefaultSlidingExpireTime = OtpSendLimitCacheItem.DefaultSlidingExpireTime;
         });
     }
 }
