@@ -57,16 +57,16 @@ public class HodHodWebCoreModule : AbpModule
         Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
             HodHodConsts.ConnectionStringName
         );
-        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-        if (string.IsNullOrEmpty(envConnection))
-        {
-            envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"/* + HodHodConsts.ConnectionStringName*/);
-        }
-        //var envConnection = Environment.GetEnvironmentVariable("ConnectionStrings__" + HodHodConsts.ConnectionStringName);
-        if (string.IsNullOrEmpty(envConnection))
-        {
-            envConnection = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
-        }
+        //var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        //if (string.IsNullOrEmpty(envConnection))
+        //{
+        //    envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"/* + HodHodConsts.ConnectionStringName*/);
+        //}
+        ////var envConnection = Environment.GetEnvironmentVariable("ConnectionStrings__" + HodHodConsts.ConnectionStringName);
+        //if (string.IsNullOrEmpty(envConnection))
+        //{
+        //    envConnection = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        //}
 
         //Configuration.DefaultNameOrConnectionString = envConnection;
 
