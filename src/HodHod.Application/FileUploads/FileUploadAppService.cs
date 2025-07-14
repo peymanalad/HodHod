@@ -15,11 +15,14 @@ namespace HodHod.FileUploads;
 public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 {
     private const int MaxFileCount = 5;
-    private const long MaxFileSize = 10 * 1024 * 1024; //10 MB
+    private const long MaxFileSize = 20 * 1024 * 1024; //20 MB
 
     private static readonly HashSet<string> AllowedExtensions = new()
     {
-        ".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".mov", ".avi", ".mp3", ".wav", ".ogg"
+        ".jpg", ".jpeg", ".png", ".webp", ".gif",
+        ".mp4", ".mov", ".avi", ".webm",
+        ".mp3", ".wav", ".ogg",
+        ".docx", ".txt", ".pdf"
     };
 
     private readonly IHttpContextAccessor _httpContextAccessor;

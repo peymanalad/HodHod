@@ -38,7 +38,7 @@ public class ChatControllerBase : HodHodControllerBase
                 throw new UserFriendlyException(L("File_Empty_Error"));
             }
 
-            if (file.Length > 10000000) //10MB
+            if (file.Length > 20 * 1024 * 1024) //20MB
             {
                 throw new UserFriendlyException(L("File_SizeLimit_Error"));
             }
