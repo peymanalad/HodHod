@@ -34,5 +34,10 @@ public class TempFileCacheManager : ITempFileCacheManager
     {
         return _cache.GetOrDefault(token);
     }
+
+    public void ClearFile(string token)
+    {
+        _cache.Remove(token);
+    }
 }
 

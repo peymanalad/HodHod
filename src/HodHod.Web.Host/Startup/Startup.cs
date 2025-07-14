@@ -46,6 +46,7 @@ using HodHod.Web.Authentication.PasswordlessLogin;
 using HodHod.Web.OpenIddict;
 using Abp.AspNetCore.OpenIddict;
 using HodHod.Authorization.QrLogin;
+using HodHod.Web.Reports;
 
 namespace HodHod.Web.Startup;
 
@@ -124,6 +125,7 @@ public class Startup
         }
 
         services.AddPasswordlessLoginRateLimit();
+        services.AddReportRateLimit();
 
         //Recaptcha
         services.AddreCAPTCHAV3(x =>
@@ -137,7 +139,9 @@ public class Startup
             //Hangfire(Enable to use Hangfire instead of default job manager)
             services.AddHangfire(config =>
             {
-                config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
+                //config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
+                var dbConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? _appConfiguration.GetConnectionString("Default");
+                config.UseSqlServerStorage(dbConn);
             });
 
             services.AddHangfireServer();

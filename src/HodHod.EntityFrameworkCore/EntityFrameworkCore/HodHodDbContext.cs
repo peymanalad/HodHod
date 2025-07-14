@@ -20,6 +20,7 @@ using HodHod.MultiTenancy;
 using HodHod.MultiTenancy.Accounting;
 using HodHod.MultiTenancy.Payments;
 using HodHod.Storage;
+using HodHod.Reports;
 
 namespace HodHod.EntityFrameworkCore;
 
@@ -56,6 +57,10 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<SubCategory> SubCategories { get; set; }
+
+    public virtual DbSet<Report> Reports { get; set; }
+
+    public virtual DbSet<ReportFile> ReportFiles { get; set; }
 
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
@@ -130,6 +135,35 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
         {
             b.HasIndex(e => new { e.TenantId, e.SourceUserId });
             b.HasIndex(e => new { e.TenantId, e.TargetUserId });
+        });
+
+        modelBuilder.Entity<SubCategory>(b =>
+        {
+            b.HasOne(sc => sc.Category)
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(sc => sc.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<HodHod.Reports.Report>(b =>
+        {
+            b.HasOne(r => r.Category)
+                .WithMany()
+                .HasForeignKey(r => r.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasOne(r => r.SubCategory)
+                .WithMany()
+                .HasForeignKey(r => r.SubCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<HodHod.Reports.ReportFile>(b =>
+        {
+            b.HasOne(rf => rf.Report)
+                .WithMany(r => r.Files)
+                .HasForeignKey(rf => rf.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.ConfigureOpenIddict();

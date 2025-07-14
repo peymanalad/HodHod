@@ -237,6 +237,22 @@ public class AccountAppService : HodHodAppServiceBase, IAccountAppService
             return;
         }
 
+        var limiterCache = _cacheManager.GetCache<string, OtpSendLimitCacheItem>(OtpSendLimitCacheItem.CacheName);
+        var limiter = await limiterCache.GetOrDefaultAsync(phoneNumber);
+        var now = Clock.Now;
+        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 2)
+        {
+            throw new UserFriendlyException(L("OtpSendLimitExceeded"));
+        }
+
+        if (limiter == null || limiter.WindowStart.AddHours(1) <= now)
+        {
+            limiter = new OtpSendLimitCacheItem(now, 0);
+        }
+
+        limiter.Count++;
+        await limiterCache.SetAsync(phoneNumber, limiter, absoluteExpireTime: new DateTimeOffset(limiter.WindowStart.AddHours(1)));
+
         var code = await _passwordlessLoginManager.GeneratePasswordlessLoginCode(
             AbpSession.TenantId,
             phoneNumber

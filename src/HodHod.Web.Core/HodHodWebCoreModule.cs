@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using Abp.AspNetCore;
 using Abp.AspNetCore.Configuration;
@@ -56,6 +57,18 @@ public class HodHodWebCoreModule : AbpModule
         Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
             HodHodConsts.ConnectionStringName
         );
+        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        if (string.IsNullOrEmpty(envConnection))
+        {
+            envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"/* + HodHodConsts.ConnectionStringName*/);
+        }
+        //var envConnection = Environment.GetEnvironmentVariable("ConnectionStrings__" + HodHodConsts.ConnectionStringName);
+        if (string.IsNullOrEmpty(envConnection))
+        {
+            envConnection = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        }
+
+        //Configuration.DefaultNameOrConnectionString = envConnection;
 
         //Use database for language management
         Configuration.Modules.Zero().LanguageManagement.EnableDbLocalization();
@@ -132,6 +145,10 @@ public class HodHodWebCoreModule : AbpModule
         appFolders.SampleProfileImagesFolder = Path.Combine(_env.WebRootPath,
             $"Common{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}SampleProfilePics");
         appFolders.WebLogsFolder = Path.Combine(_env.ContentRootPath, $"App_Data{Path.DirectorySeparatorChar}Logs");
+
+        appFolders.ReportFilesFolder = "/var/dockers/HodHodBackend/BinaryObjects";
+
+        Directory.CreateDirectory(appFolders.ReportFilesFolder);
     }
 }
 
