@@ -18,7 +18,7 @@ public static class PasswordlessLoginDependencyInjectionExtensions
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString(),
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 2,
+                        PermitLimit = 200,
                         Window = TimeSpan.FromHours(1)
                     }
                 )
