@@ -39,7 +39,7 @@ services:
       - ./secrets:/var/opt/mssql/secrets
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=testtest
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
       - MSSQL_PID=developer
       - MSSQL_TCP_PORT=1433
 
