@@ -18,6 +18,7 @@ public class Program
             {
                 opt.AddServerHeader = false;
                 opt.Limits.MaxRequestLineSize = 16 * 1024;
+                opt.Limits.MaxRequestBodySize = 50 * 1024 * 1024; // 50MB
             })
             .UseContentRoot(Directory.GetCurrentDirectory())
             .ConfigureLogging((context, logging) =>

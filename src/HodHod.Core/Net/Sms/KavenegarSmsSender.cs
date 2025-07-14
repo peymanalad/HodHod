@@ -33,7 +33,7 @@ public class KavenegarSmsSender : ISmsSender, ITransientDependency
             var finalMessage = otpTemplate
                 .Replace("{appName}", appname)
                 .Replace("{otp}", token)
-                .Replace("{apiKey}", "RVwFEFi4EJE");
+                .Replace("{apiKey}", "#hodhod");
             var url = $"https://api.kavenegar.com/v1/{apiKey}/sms/send.json?receptor={number}&sender={sender}&message={finalMessage}&tag={tag}";
             using var client = new HttpClient();
             var response = await client.GetAsync(url);

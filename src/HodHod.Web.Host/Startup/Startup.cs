@@ -47,6 +47,7 @@ using HodHod.Web.OpenIddict;
 using Abp.AspNetCore.OpenIddict;
 using HodHod.Authorization.QrLogin;
 using HodHod.Web.Reports;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace HodHod.Web.Startup;
 
@@ -65,6 +66,11 @@ public class Startup
 
     public IServiceProvider ConfigureServices(IServiceCollection services)
     {
+        services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+        });
+
         //MVC
         var mvcBuilder = services.AddControllersWithViews(options =>
         {
