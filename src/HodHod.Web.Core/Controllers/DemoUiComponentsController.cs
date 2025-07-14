@@ -8,6 +8,7 @@ using Abp.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using HodHod.DemoUiComponents.Dto;
 using HodHod.Storage;
+using HodHod.Storage.FileValidator;
 
 namespace HodHod.Web.Controllers;
 
@@ -15,10 +16,12 @@ namespace HodHod.Web.Controllers;
 public class DemoUiComponentsController : HodHodControllerBase
 {
     private readonly IBinaryObjectManager _binaryObjectManager;
+    private readonly IFileValidatorManager _fileValidatorManager;
 
-    public DemoUiComponentsController(IBinaryObjectManager binaryObjectManager)
+    public DemoUiComponentsController(IBinaryObjectManager binaryObjectManager, IFileValidatorManager fileValidatorManager)
     {
         _binaryObjectManager = binaryObjectManager;
+        _fileValidatorManager = fileValidatorManager;
     }
 
     [HttpPost]
@@ -38,9 +41,17 @@ public class DemoUiComponentsController : HodHodControllerBase
 
             foreach (var file in files)
             {
-                if (file.Length > 31457280) //1MB
+                if (file.Length > 20 * 1024 * 1024) //20MB
                 {
                     throw new UserFriendlyException(L("File_SizeLimit_Error"));
+                }
+
+                // Validate the uploaded file to ensure it meets the allowed file type and signature requirements.
+                var validationResult = _fileValidatorManager.ValidateAll(new FileValidateInput(file));
+
+                if (!validationResult.Success)
+                {
+                    throw new UserFriendlyException($"Validation failed: {validationResult.Message}");
                 }
 
                 byte[] fileBytes;

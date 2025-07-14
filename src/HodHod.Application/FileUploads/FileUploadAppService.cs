@@ -8,6 +8,7 @@ using Abp.UI;
 using Microsoft.AspNetCore.Http;
 using HodHod.FileUploads.Dto;
 using HodHod.Storage;
+using HodHod.Storage.FileValidator;
 
 namespace HodHod.FileUploads;
 
@@ -27,10 +28,14 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITempFileCacheManager _tempFileCacheManager;
-    public FileUploadAppService(IHttpContextAccessor httpContextAccessor, ITempFileCacheManager tempFileCacheManager)
+    private readonly IFileValidatorManager _fileValidatorManager;
+
+    public FileUploadAppService(IHttpContextAccessor httpContextAccessor, ITempFileCacheManager tempFileCacheManager,
+        IFileValidatorManager fileValidatorManager)
     {
         _httpContextAccessor = httpContextAccessor;
         _tempFileCacheManager = tempFileCacheManager;
+        _fileValidatorManager = fileValidatorManager;
     }
 
     public async Task<List<UploadFileOutput>> UploadFiles()
@@ -51,11 +56,19 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
         foreach (var file in files)
         {
-            if (file.Length > MaxFileSize)
+            if (file.Length > 20 * 1024 * 1024) //20MB
             {
                 //throw new UserFriendlyException(L("File_SizeLimit_Error"));
                 throw new UserFriendlyException(L("فایل انتخاب\u200cشده خیلی بزرگ است! حداکثر مجاز: {20} مگابایت."));
 
+            }
+
+            // Validate the uploaded file to ensure it meets the allowed file type and signature requirements.
+            var validationResult = _fileValidatorManager.ValidateAll(new FileValidateInput(file));
+
+            if (!validationResult.Success)
+            {
+                throw new UserFriendlyException($"Validation failed: {validationResult.Message}");
             }
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
