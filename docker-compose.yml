@@ -11,7 +11,8 @@ services:
       - hodhod-backend-app-network
     restart: always
     environment:
-      ASPNETECORE_URLS: "http://[::]:80"
+      ASPNETCORE_URLS: "http://*:80"
+      ASPNETCORE_HTTP_PORTS: ""
     env_file:
       - ./.env
     depends_on:
