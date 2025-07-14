@@ -15,7 +15,7 @@ COPY ["src/HodHod.Core.Shared/HodHod.Core.Shared.csproj", "src/HodHod.Core.Share
 COPY ["src/HodHod.Core/HodHod.Core.csproj", "src/HodHod.Core/"]
 COPY ["src/HodHod.EntityFrameworkCore/HodHod.EntityFrameworkCore.csproj", "src/HodHod.EntityFrameworkCore/"]
 COPY ["src/HodHod.GraphQL/HodHod.GraphQL.csproj", "src/HodHod.GraphQL/"]
-RUN dotnet restore "src/HodHod.Web.Host/HodHod.Web.Host.csproj"
+RUN dotnet restore "src/HodHod.Web.Host/HodHod.Web.Host.csproj" -s "https://nexus.repo.stinascloud.ir/repository/nuget/index.json"
 COPY . .
 WORKDIR "/src/src/HodHod.Web.Host"
 RUN dotnet build "HodHod.Web.Host.csproj" -c Release -o /app/build
