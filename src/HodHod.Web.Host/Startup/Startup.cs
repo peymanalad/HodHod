@@ -68,7 +68,8 @@ public class Startup
     {
         services.Configure<FormOptions>(options =>
         {
-            options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+            //options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+            options.MultipartBodyLengthLimit = long.MaxValue;
         });
 
         //MVC

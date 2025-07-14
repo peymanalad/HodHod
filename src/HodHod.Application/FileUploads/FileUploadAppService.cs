@@ -26,8 +26,6 @@ namespace HodHod.FileUploads;
 public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
 {
-    private const int MaxFileCount = 5;
-    private const long MaxFileSize = 3145728000; //20 MB
 
     private static readonly HashSet<string> AllowedExtensions = new()
     {
@@ -57,22 +55,10 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
             throw new UserFriendlyException(L("فایلی برای ارسال انتخاب نشده! لطفا\u064b ابتدا یک فایل انتخاب کنید."));
         }
 
-        if (files.Count > MaxFileCount)
-        {
-            //throw new UserFriendlyException("Too many files uploaded. Max is " + MaxFileCount);
-            throw new UserFriendlyException("شما فقط می\u200cتوانید تا {5} فایل بارگذاری کنید. لطفا\u064b تعداد فایل\u200cها را کاهش دهید.");
-        }
-
         var outputs = new List<FileUploads.Dto.UploadFileOutput>();
 
         foreach (var file in files)
         {
-            if (file.Length > 20 * 1024 * 1024) //20MB
-            {
-                //throw new UserFriendlyException(L("File_SizeLimit_Error"));
-                throw new UserFriendlyException(L("فایل انتخاب\u200cشده خیلی بزرگ است! حداکثر مجاز: {20} مگابایت."));
-
-            }
 
             // Validate the uploaded file to ensure it meets the allowed file type and signature requirements.
             var validationResult = _fileValidatorManager.ValidateAll(new FileValidateInput(file));
