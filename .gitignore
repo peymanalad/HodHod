@@ -4,6 +4,8 @@
 
 .idea
 .env
+data
+log
 
 # Logs
 Logs/
