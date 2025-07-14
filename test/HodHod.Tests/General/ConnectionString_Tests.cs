@@ -10,7 +10,7 @@ public class ConnectionString_Tests
     [Fact]
     public void SqlConnectionStringBuilder_Test()
     {
-        var csb = new SqlConnectionStringBuilder("Server=localhost; Database=HodHod; Trusted_Connection=True;");
-        csb["Database"].ShouldBe("HodHod");
+        var csb = new SqlConnectionStringBuilder("Server=mssql; Database=HodHodDb; User=sa; Password=Ch@mr@nCh@mr@n; TrustServerCertificate=True");
+        csb["Database"].ShouldBe("HodHodDb");
     }
 }

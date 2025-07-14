@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -107,7 +108,8 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
 
     private bool CheckDatabaseInternal()
     {
-        var connectionString = _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        //var connectionString = _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
 
         if (string.IsNullOrEmpty(connectionString))
         {
