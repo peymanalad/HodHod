@@ -29,11 +29,9 @@ public class KavenegarSmsSender : ISmsSender, ITransientDependency
             var sender = "20005209";
             var tag = "otp";
             var appname = "سامانه هدهد";
-            const string otpTemplate = "« {appName} »\nکد ثبت گزارش:\n{otp}\n{apiKey}\nلغو11";
+            const string otpTemplate = "« سامانه هدهد »\nکد ثبت گزارش:\n{otp}\nلغو11";
             var finalMessage = otpTemplate
-                .Replace("{appName}", appname)
-                .Replace("{otp}", token)
-                .Replace("{apiKey}", "#hodhod");
+                .Replace("{otp}", token);
             var url = $"https://api.kavenegar.com/v1/{apiKey}/sms/send.json?receptor={number}&sender={sender}&message={finalMessage}&tag={tag}";
             using var client = new HttpClient();
             var response = await client.GetAsync(url);

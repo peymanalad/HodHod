@@ -9,11 +9,22 @@ using Microsoft.AspNetCore.Http;
 using HodHod.FileUploads.Dto;
 using HodHod.Storage;
 using HodHod.Storage.FileValidator;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Abp.IO.Extensions;
+using Abp.UI;
+using Abp.Web.Models;
+using Microsoft.AspNetCore.Mvc;
+using HodHod.DemoUiComponents.Dto;
+using HodHod.Storage;
+using HodHod.Storage.FileValidator;
 
 namespace HodHod.FileUploads;
 
 [AbpAllowAnonymous]
 public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
+
 {
     private const int MaxFileCount = 5;
     private const long MaxFileSize = 3145728000; //20 MB
@@ -38,7 +49,7 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         _fileValidatorManager = fileValidatorManager;
     }
 
-    public async Task<List<UploadFileOutput>> UploadFiles()
+    public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles()
     {
         var files = _httpContextAccessor.HttpContext?.Request?.Form?.Files;
         if (files == null || files.Count == 0)
@@ -52,7 +63,7 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
             throw new UserFriendlyException("شما فقط می\u200cتوانید تا {5} فایل بارگذاری کنید. لطفا\u064b تعداد فایل\u200cها را کاهش دهید.");
         }
 
-        var outputs = new List<UploadFileOutput>();
+        var outputs = new List<FileUploads.Dto.UploadFileOutput>();
 
         foreach (var file in files)
         {
@@ -88,7 +99,7 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
             var token = Guid.NewGuid().ToString("N");
             _tempFileCacheManager.SetFile(token, new TempFileInfo(file.FileName, file.ContentType, bytes));
 
-            outputs.Add(new UploadFileOutput
+            outputs.Add(new FileUploads.Dto.UploadFileOutput
             {
                 Token = token,
                 FileName = file.FileName
