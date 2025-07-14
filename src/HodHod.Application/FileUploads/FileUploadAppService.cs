@@ -43,7 +43,8 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
         if (files.Count > MaxFileCount)
         {
-            throw new UserFriendlyException("Too many files uploaded. Max is " + MaxFileCount);
+            //throw new UserFriendlyException("Too many files uploaded. Max is " + MaxFileCount);
+            throw new UserFriendlyException("فایل انتخاب\u200cشده خیلی بزرگ است! حداکثر مجاز: {20} مگابایت.");
         }
 
         var outputs = new List<UploadFileOutput>();
@@ -58,7 +59,9 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(ext))
             {
-                throw new UserFriendlyException("Unsupported file type: " + ext);
+                //throw new UserFriendlyException("Unsupported file type: " + ext);
+                throw new UserFriendlyException("نوع فایل نامعتبر است!");
+
             }
 
             byte[] bytes;

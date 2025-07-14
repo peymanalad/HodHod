@@ -59,9 +59,9 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         var limiterCache = _cacheManager.GetCache<string, OtpSendLimitCacheItem>(OtpSendLimitCacheItem.CacheName);
         var limiter = await limiterCache.GetOrDefaultAsync(input.PhoneNumber);
         var now = Clock.Now;
-        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 2)
+        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 200)
         {
-            throw new UserFriendlyException(L("OtpSendLimitExceeded"));
+            throw new UserFriendlyException(L("تعداد دفعات ارسال کد زیاد شده است. لطفا\u064b کمی صبر کرده و دوباره تلاش کنید."));
         }
 
         if (limiter == null || limiter.WindowStart.AddHours(1) <= now)

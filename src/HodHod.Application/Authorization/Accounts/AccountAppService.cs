@@ -240,7 +240,7 @@ public class AccountAppService : HodHodAppServiceBase, IAccountAppService
         var limiterCache = _cacheManager.GetCache<string, OtpSendLimitCacheItem>(OtpSendLimitCacheItem.CacheName);
         var limiter = await limiterCache.GetOrDefaultAsync(phoneNumber);
         var now = Clock.Now;
-        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 2)
+        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 200)
         {
             throw new UserFriendlyException(L("OtpSendLimitExceeded"));
         }
