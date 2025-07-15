@@ -129,7 +129,8 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
         var admin = await UserManager.FindByIdAsync("1");
         await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
 
-        var loginResult = await _logInManager.LoginAsync(User.AdminUserName, "123qwe");
+        var defaultPass = Environment.GetEnvironmentVariable("INIT_ADMIN_PASSWORD") ?? "123qwe";
+        var loginResult = await _logInManager.LoginAsync(User.AdminUserName, defaultPass);
         var identity = await _signInManager.CreateUserPrincipalAsync(admin);
 
         var signInResult = await _signInManager.SignInOrTwoFactorAsync(loginResult, false);

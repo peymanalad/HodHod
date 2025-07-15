@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Abp;
 using Abp.Authorization;
 using Abp.Authorization.Roles;
@@ -57,8 +58,8 @@ public class TenantRoleAndUserBuilder
         var adminUser = _context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.TenantId == _tenantId && u.UserName == AbpUserBase.AdminUserName);
         if (adminUser == null)
         {
-            adminUser = User.CreateTenantAdminUser(_tenantId, "admin@defaulttenant.com");
-            adminUser.Password = new PasswordHasher<User>(new OptionsWrapper<PasswordHasherOptions>(new PasswordHasherOptions())).HashPassword(adminUser, "123qwe");
+            var tenantPass = Environment.GetEnvironmentVariable("DEFAULT_ADMIN_PASSWORD") ?? "123qwe";
+            adminUser.Password = new PasswordHasher<User>(new OptionsWrapper<PasswordHasherOptions>(new PasswordHasherOptions())).HashPassword(adminUser, tenantPass);
             adminUser.IsEmailConfirmed = true;
             adminUser.ShouldChangePasswordOnNextLogin = false;
             adminUser.IsActive = true;

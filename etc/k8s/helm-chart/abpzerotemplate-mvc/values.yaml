@@ -3,7 +3,7 @@ global:
   wwwUrl: "https://abpzerotemplate-www"
   nginxProxyBufferSize: "32k"
   nginxProxyBuffersNumber: "8"
-  defaultConnString: "Server=anz-sql,1433;Database=DownloadDevToolsDb;User ID=sa;Password=123qweX."
+  defaultConnString: "Server=${DB_SERVER};Database=${DB_NAME};User ID=${DB_USER};Password=${DB_PASSWORD}"
 www:
   containerImage: "abpzerotemplate-mvc"
 dbmigrator:

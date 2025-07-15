@@ -8,7 +8,7 @@ services:
     ports:
       - "1433:1433"
     environment:
-      SA_PASSWORD: Super_Encrypted_Passw0rd!
+      SA_PASSWORD: ${DB_SA_PASSWORD}
       ACCEPT_EULA: Y
     volumes:
       - mssqlDb-data:/var/opt/mssql

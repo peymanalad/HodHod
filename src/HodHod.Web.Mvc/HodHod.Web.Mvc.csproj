@@ -50,5 +50,6 @@
     <PackageReference Include="Abp.Castle.Log4Net" Version="10.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="9.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.5" />
+    <PackageReference Include="DotNetEnv" Version="3.1.0" />
   </ItemGroup>
 </Project>

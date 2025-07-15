@@ -8,6 +8,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        DotNetEnv.Env.TraversePath().Load();
         CreateWebHostBuilder(args).Build().Run();
     }
 

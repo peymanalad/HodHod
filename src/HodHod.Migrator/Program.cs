@@ -14,7 +14,7 @@ public class Program
     public static void Main(string[] args)
     {
         ParseArgs(args);
-
+        DotNetEnv.Env.TraversePath().Load();
         bool.TryParse(Environment.GetEnvironmentVariable("ASPNETCORE_Docker_Enabled"), out bool isDockerEnabled);
 
         using (var bootstrapper = AbpBootstrapper.Create<HodHodMigratorModule>())

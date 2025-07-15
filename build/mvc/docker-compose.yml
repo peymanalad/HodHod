@@ -9,6 +9,6 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - ConnectionStrings__Default=Server=192.168.1.37,1433;Database=DownloadDevToolsDb;User=sa;Password=123qwe;TrustServerCertificate=True;
+      - ConnectionStrings__Default=Server=${DB_SERVER};Database=${DB_NAME};User=${DB_USER};Password=${DB_PASSWORD};TrustServerCertificate=True;
     ports:
       - "44301:443"

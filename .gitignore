@@ -150,3 +150,5 @@ src/HodHod.Web.Host/node_modules
 src/HodHod.Web.Host/wwwroot/view-resources/Views/_Bundles
 src/HodHod.Web.Host/package-lock.json
 src/HodHod.Web.Host/wwwroot/view-resources/**/*.min.*
+# Environment variable files
+.env

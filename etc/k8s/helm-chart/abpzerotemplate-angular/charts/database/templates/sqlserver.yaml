@@ -21,6 +21,6 @@ spec:
               containerPort: 1433
           env:
           - name: SA_PASSWORD
-            value: "123qweX."
+            value: "${DB_PASSWORD}"
           - name: ACCEPT_EULA
             value: "Y"

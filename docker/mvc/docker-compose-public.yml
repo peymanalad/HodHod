@@ -9,7 +9,7 @@ services:
       context: ../../
       dockerfile: src/DownloadDevTools.Web.Public/Dockerfile
     environment:
-      - ConnectionStrings__Default=Server=mssqlDb;Database=DownloadDevToolsDb;User=sa;Password=Super_Encrypted_Passw0rd!
+      - ConnectionStrings__Default=Server=${DB_SERVER};Database=${DB_NAME};User=${DB_USER};Password=${DB_PASSWORD};
     ports:
       - "44303:443"
     networks:

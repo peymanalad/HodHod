@@ -9,7 +9,7 @@ services:
       context: ../../
       dockerfile: src/DownloadDevTools.Web.Mvc/Dockerfile
     environment:
-      - ConnectionStrings__Default=Server=mssqlDb;Database=DownloadDevToolsDb;User=sa;Password=Super_Encrypted_Passw0rd!
+      - ConnectionStrings__Default=Server=${DB_SERVER};Database=${DB_NAME};User=${DB_USER};Password=${DB_PASSWORD};    
       - Abp__RedisCache__ConnectionString=localhost:6379
     ports:
       - "44302:443"
