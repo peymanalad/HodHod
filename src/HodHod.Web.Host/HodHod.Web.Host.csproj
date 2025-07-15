@@ -42,6 +42,7 @@
   <ItemGroup>
     <PackageReference Include="Abp.Castle.Log4Net" Version="10.2.0" />
     <PackageReference Include="DotNetEnv" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\swagger\ui\index.html" />

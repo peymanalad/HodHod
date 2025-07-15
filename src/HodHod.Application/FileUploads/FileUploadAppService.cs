@@ -32,7 +32,7 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         ".jpg", ".jpeg", ".png", ".webp", ".gif",
         ".mp4", ".mov", ".avi", ".webm",
         ".mp3", ".wav", ".ogg",
-        ".docx", ".txt", ".pdf"
+        ".docx", ".txt"/*, ".pdf"*/
     };
 
     private readonly IHttpContextAccessor _httpContextAccessor;

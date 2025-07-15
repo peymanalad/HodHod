@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +21,10 @@ public class Program
                 opt.AddServerHeader = false;
                 opt.Limits.MaxRequestLineSize = 16 * 1024;
                 opt.Limits.MaxRequestBodySize = 50 * 1024 * 1024; // 50MB
+
+                opt.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+                opt.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(2);
+                //opt.Limits.RequestBodyTimeout = TimeSpan.FromMinutes(2);
             })
             .UseContentRoot(Directory.GetCurrentDirectory())
             .ConfigureLogging((context, logging) =>
