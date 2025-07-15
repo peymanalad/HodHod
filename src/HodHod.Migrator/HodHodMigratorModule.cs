@@ -28,9 +28,9 @@ public class HodHodMigratorModule : AbpModule
 
     public override void PreInitialize()
     {
-        Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-            HodHodConsts.ConnectionStringName
-            );
+        //Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+        //    HodHodConsts.ConnectionStringName
+        //    );
         //var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
         //if (string.IsNullOrEmpty(envConnection))
         //{
@@ -38,8 +38,14 @@ public class HodHodMigratorModule : AbpModule
         //        HodHodConsts.ConnectionStringName);
         //}
         //Configuration.DefaultNameOrConnectionString = envConnection;
-        Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
+        //Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
+        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        Configuration.DefaultNameOrConnectionString = !string.IsNullOrEmpty(envConnection)
+            ? envConnection
+            : _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
 
+        Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("ABP_LICENSE_CODE")
+                                                         ?? _appConfiguration["AbpZeroLicenseCode"];
         Configuration.BackgroundJobs.IsJobExecutionEnabled = false;
         Configuration.ReplaceService(typeof(IEventBus), () =>
         {

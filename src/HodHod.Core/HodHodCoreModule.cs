@@ -92,7 +92,7 @@ public class HodHodCoreModule : AbpModule
 
         //Adding webhook definition providers
         Configuration.Webhooks.Providers.Add<AppWebhookDefinitionProvider>();
-        Configuration.Webhooks.TimeoutDuration = TimeSpan.FromMinutes(1);
+        Configuration.Webhooks.TimeoutDuration = TimeSpan.FromMinutes(2);
         Configuration.Webhooks.IsAutomaticSubscriptionDeactivationEnabled = false;
 
         //Enable this line to create a multi-tenant application.

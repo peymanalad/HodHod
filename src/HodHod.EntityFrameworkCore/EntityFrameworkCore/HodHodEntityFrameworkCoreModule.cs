@@ -1,4 +1,5 @@
-﻿using Abp;
+﻿using System;
+using Abp;
 using Abp.Dependency;
 using Abp.EntityFrameworkCore.Configuration;
 using Abp.Modules;
@@ -8,6 +9,7 @@ using Abp.Zero.EntityFrameworkCore;
 using HodHod.Configuration;
 using HodHod.EntityHistory;
 using HodHod.Migrations.Seed;
+using Microsoft.Extensions.Configuration;
 
 namespace HodHod.EntityFrameworkCore;
 
@@ -25,6 +27,8 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PreInitialize()
     {
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
         if (!SkipDbContextRegistration)
         {
             Configuration.Modules.AbpEfCore().AddDbContext<HodHodDbContext>(options =>
