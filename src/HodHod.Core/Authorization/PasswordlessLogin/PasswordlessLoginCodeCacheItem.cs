@@ -8,7 +8,7 @@ public class PasswordlessLoginCodeCacheItem
 
     public string Code { get; set; }
 
-    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(1);
+    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(2);
 
     public PasswordlessLoginCodeCacheItem()
     {

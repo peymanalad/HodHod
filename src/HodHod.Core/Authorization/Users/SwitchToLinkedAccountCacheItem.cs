@@ -7,7 +7,7 @@ public class SwitchToLinkedAccountCacheItem
 {
     public const string CacheName = "AppSwitchToLinkedAccountCache";
 
-    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(1);
+    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(2);
 
     public int? TargetTenantId { get; set; }
 

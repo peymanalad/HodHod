@@ -7,7 +7,7 @@ public class ImpersonationCacheItem
 {
     public const string CacheName = "AppImpersonationCache";
 
-    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(1);
+    public static readonly TimeSpan DefaultSlidingExpireTime = TimeSpan.FromMinutes(2);
 
     public int? ImpersonatorTenantId { get; set; }
 
