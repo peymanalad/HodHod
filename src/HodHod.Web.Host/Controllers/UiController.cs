@@ -1,4 +1,5 @@
-﻿using Abp.Auditing;
+﻿using System;
+using Abp.Auditing;
 using Abp.Authorization;
 using Abp.Authorization.Users;
 using Abp.Configuration.Startup;
@@ -56,7 +57,7 @@ public class UiController : HodHodControllerBase
     {
         var model = new HomePageModel();
 
-        if (_databaseCheckHelper.Exist(_appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"]))
+        if (_databaseCheckHelper.Exist(Environment.GetEnvironmentVariable($"ConnectionStrings:{HodHodConsts.ConnectionStringName}")))
         {
             model.LoginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
             model.IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled;

@@ -1,4 +1,5 @@
-﻿using Abp.AutoMapper;
+﻿using System;
+using Abp.AutoMapper;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 
@@ -17,7 +18,10 @@ public class HodHodGraphQLModule : AbpModule
         base.PreInitialize();
 
         //Adding custom AutoMapper configuration
-        Configuration.Modules.AbpAutoMapper().Configurators.Add(CustomDtoMapper.CreateMappings);
+        if (Environment.GetEnvironmentVariable("ENABLE_GRAPHQL_AUTOMAPPER")?.ToLower() != "false")
+        {
+            Configuration.Modules.AbpAutoMapper().Configurators.Add(CustomDtoMapper.CreateMappings);
+        }
     }
 }
 

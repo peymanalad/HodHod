@@ -1,4 +1,5 @@
-﻿using Abp.Auditing;
+﻿using System;
+using Abp.Auditing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +29,7 @@ public class HomeController : HodHodControllerBase
             return RedirectToAction("Index", "Ui");
         }
 
-        var homePageUrl = _appConfiguration["App:HomePageUrl"];
+        var homePageUrl = Environment.GetEnvironmentVariable("App:HomePageUrl");
         if (string.IsNullOrEmpty(homePageUrl))
         {
             return RedirectToAction("Index", "Ui");

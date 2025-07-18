@@ -30,7 +30,7 @@ public class TenantDemoDataBuilder : HodHodServiceBase, ITransientDependency
     {
         get
         {
-            return string.Equals(_appConfiguration["App:DemoMode"], "true", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Environment.GetEnvironmentVariable("App:DemoMode"), "true", StringComparison.OrdinalIgnoreCase);
         }
     }
 

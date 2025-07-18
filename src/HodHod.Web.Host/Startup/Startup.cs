@@ -93,7 +93,7 @@ public class Startup
                 builder
                     //.WithOrigins(
                     //    // App:CorsOrigins in appsettings.json can contain more than one address separated by comma.
-                    //    _appConfiguration["App:CorsOrigins"]
+                    //    Environment.GetEnvironmentVariable("App:CorsOrigins"]
                     //        .Split(",", StringSplitOptions.RemoveEmptyEntries)
                     //        .Select(o => o.RemovePostFix("/"))
                     //        .ToArray()
@@ -106,7 +106,7 @@ public class Startup
             });
         });
 
-        if (bool.Parse(_appConfiguration["KestrelServer:IsEnabled"]))
+        if (bool.Parse(Environment.GetEnvironmentVariable("KestrelServer:IsEnabled") ?? "false"))
         {
             ConfigureKestrel(services);
         }
@@ -114,7 +114,7 @@ public class Startup
         IdentityRegistrar.Register(services);
         AuthConfigurer.Configure(services, _appConfiguration);
 
-        if (bool.Parse(_appConfiguration["OpenIddict:IsEnabled"]))
+        if (bool.TryParse(Environment.GetEnvironmentVariable("OpenIddict:IsEnabled"), out var isEnabled) && isEnabled)
         {
             OpenIddictRegistrar.Register(services, _appConfiguration);
             services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme,
@@ -138,8 +138,8 @@ public class Startup
         //Recaptcha
         services.AddreCAPTCHAV3(x =>
         {
-            x.SiteKey = _appConfiguration["Recaptcha:SiteKey"];
-            x.SiteSecret = _appConfiguration["Recaptcha:SecretKey"];
+            x.SiteKey = Environment.GetEnvironmentVariable("Recaptcha:SiteKey");
+            x.SiteSecret = Environment.GetEnvironmentVariable("Recaptcha:SecretKey");
         });
 
         if (WebConsts.HangfireDashboardEnabled)
@@ -160,7 +160,7 @@ public class Startup
             services.AddAndConfigureGraphQL();
         }
 
-        if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
+        if (bool.TryParse(Environment.GetEnvironmentVariable("HealthChecks:HealthChecksEnabled"), out var healthChecksEnabled) && healthChecksEnabled)
         {
             ConfigureHealthChecks(services);
         }
@@ -215,7 +215,7 @@ public class Startup
         app.UseAuthentication();
         app.UseJwtTokenMiddleware();
 
-        if (bool.Parse(_appConfiguration["OpenIddict:IsEnabled"]))
+        if (bool.Parse(Environment.GetEnvironmentVariable("OpenIddict_IsEnabled")))
         {
             app.UseAbpOpenIddictValidation();
         }
@@ -225,7 +225,7 @@ public class Startup
         using (var scope = app.ApplicationServices.CreateScope())
         {
             if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
-                .Exist(_appConfiguration["ConnectionStrings:Default"]))
+                .Exist(Environment.GetEnvironmentVariable("ConnectionStrings:Default")))
             {
                 app.UseAbpRequestLocalization();
             }
@@ -241,9 +241,9 @@ public class Startup
             });
         }
 
-        if (bool.Parse(_appConfiguration["Payment:Stripe:IsActive"]))
+        if (bool.Parse(Environment.GetEnvironmentVariable("Payment_Stripe_IsActive")))
         {
-            StripeConfiguration.ApiKey = _appConfiguration["Payment:Stripe:SecretKey"];
+            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("Payment_Stripe_SecretKey");
         }
 
         if (WebConsts.GraphQL.Enabled)
@@ -272,7 +272,7 @@ public class Startup
                 .ConfigureAllEndpoints(endpoints);
         });
 
-        if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
+        if (bool.Parse(Environment.GetEnvironmentVariable("HealthChecks_HealthChecksEnabled")))
         {
             app.UseHealthChecks("/health", new HealthCheckOptions()
             {
@@ -280,7 +280,7 @@ public class Startup
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
 
-            if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksUI:HealthChecksUIEnabled"]))
+            if (bool.Parse(Environment.GetEnvironmentVariable("HealthChecks_HealthChecksUI_HealthChecksUIEnabled")))
             {
                 app.UseHealthChecksUI();
             }
@@ -294,11 +294,15 @@ public class Startup
 
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint(_appConfiguration["App:SwaggerEndPoint"], "HodHod API V1");
+                var swaggerEndpoint = Environment.GetEnvironmentVariable("App_SwaggerEndPoint");
+                var serverRootAddress = Environment.GetEnvironmentVariable("App_ServerRootAddress");
+
+                options.SwaggerEndpoint(swaggerEndpoint, "HodHod API V1");
                 options.IndexStream = () => Assembly.GetExecutingAssembly()
                     .GetManifestResourceStream("HodHod.Web.wwwroot.swagger.ui.index.html");
-                options.InjectBaseUrl(_appConfiguration["App:ServerRootAddress"]);
-            }); //URL: /swagger
+                options.InjectBaseUrl(serverRootAddress);
+            });
+
         }
     }
 
@@ -309,8 +313,9 @@ public class Startup
             options.Listen(new System.Net.IPEndPoint(System.Net.IPAddress.Any, 443),
                 listenOptions =>
                 {
-                    var certPassword = _appConfiguration.GetValue<string>("Kestrel:Certificates:Default:Password");
-                    var certPath = _appConfiguration.GetValue<string>("Kestrel:Certificates:Default:Path");
+                    var certPassword = Environment.GetEnvironmentVariable("Kestrel_Certificates_Default_Password");
+                    var certPath = Environment.GetEnvironmentVariable("Kestrel_Certificates_Default_Path");
+
                     var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath,
                         certPassword);
                     listenOptions.UseHttps(new HttpsConnectionAdapterOptions()

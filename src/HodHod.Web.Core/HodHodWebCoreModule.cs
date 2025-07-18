@@ -78,8 +78,8 @@ public class HodHodWebCoreModule : AbpModule
                 typeof(HodHodApplicationModule).GetAssembly()
             );
 
-        if (_appConfiguration["Authentication:JwtBearer:IsEnabled"] != null &&
-            bool.Parse(_appConfiguration["Authentication:JwtBearer:IsEnabled"]))
+        if (Environment.GetEnvironmentVariable("Authentication:JwtBearer:IsEnabled") != null &&
+            bool.Parse(Environment.GetEnvironmentVariable("Authentication:JwtBearer:IsEnabled")))
         {
             ConfigureTokenAuth();
         }
@@ -97,7 +97,7 @@ public class HodHodWebCoreModule : AbpModule
         //See app.config for Redis configuration and connection string
         //Configuration.Caching.UseRedis(options =>
         //{
-        //    options.ConnectionString = _appConfiguration["Abp:RedisCache:ConnectionString"];
+        //    options.ConnectionString = Environment.GetEnvironmentVariable("Abp:RedisCache:ConnectionString"];
         //    options.DatabaseId = _appConfiguration.GetValue<int>("Abp:RedisCache:DatabaseId");
         //});
 
@@ -114,11 +114,11 @@ public class HodHodWebCoreModule : AbpModule
         var tokenAuthConfig = IocManager.Resolve<TokenAuthConfiguration>();
 
         tokenAuthConfig.SecurityKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_appConfiguration["Authentication:JwtBearer:SecurityKey"])
+            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Authentication:JwtBearer:SecurityKey"))
         );
 
-        tokenAuthConfig.Issuer = _appConfiguration["Authentication:JwtBearer:Issuer"];
-        tokenAuthConfig.Audience = _appConfiguration["Authentication:JwtBearer:Audience"];
+        tokenAuthConfig.Issuer = Environment.GetEnvironmentVariable("Authentication:JwtBearer:Issuer");
+        tokenAuthConfig.Audience = Environment.GetEnvironmentVariable("Authentication:JwtBearer:Audience");
         tokenAuthConfig.SigningCredentials =
             new SigningCredentials(tokenAuthConfig.SecurityKey, SecurityAlgorithms.HmacSha256);
         tokenAuthConfig.AccessTokenExpiration = AppConsts.AccessTokenExpiration;

@@ -1,9 +1,9 @@
 ﻿#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM microsoft.repo.stinascloud.ir/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 
-FROM microsoft.repo.stinascloud.ir/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["src/HodHod.Migrator/HodHod.Migrator.csproj", "src/HodHod.Migrator/"]
 COPY ["src/HodHod.EntityFrameworkCore/HodHod.EntityFrameworkCore.csproj", "src/HodHod.EntityFrameworkCore/"]

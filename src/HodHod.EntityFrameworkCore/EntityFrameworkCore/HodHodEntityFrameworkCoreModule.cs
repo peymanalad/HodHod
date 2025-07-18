@@ -41,7 +41,7 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
                 else
                 {
                     HodHodDbContextConfigurer.Configure(options.DbContextOptions,
-                        options.ConnectionString);
+                        connectionString);
                 }
             });
         }
@@ -61,16 +61,27 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PostInitialize()
     {
-        var configurationAccessor = IocManager.Resolve<IAppConfigurationAccessor>();
+        var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
         using (var scope = IocManager.CreateScope())
         {
-            if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>()
-                    .Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
+            var dbChecker = scope.Resolve<DatabaseCheckHelper>();
+
+            if (!SkipDbSeed && dbChecker.Exist(dbConnectionString))
             {
                 SeedHelper.SeedHostDb(IocManager);
             }
         }
+        //var configurationAccessor = IocManager.Resolve<IAppConfigurationAccessor>();
+
+        //using (var scope = IocManager.CreateScope())
+        //{
+        //    if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>()
+        //            .Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
+        //    {
+        //        SeedHelper.SeedHostDb(IocManager);
+        //    }
+        //}
     }
 }
 

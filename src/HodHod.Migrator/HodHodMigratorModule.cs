@@ -38,14 +38,14 @@ public class HodHodMigratorModule : AbpModule
         //        HodHodConsts.ConnectionStringName);
         //}
         //Configuration.DefaultNameOrConnectionString = envConnection;
-        //Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
+        //Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("AbpZeroLicenseCode"];
         var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
         Configuration.DefaultNameOrConnectionString = !string.IsNullOrEmpty(envConnection)
             ? envConnection
             : _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
 
         Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("ABP_LICENSE_CODE")
-                                                         ?? _appConfiguration["AbpZeroLicenseCode"];
+                                                         ?? Environment.GetEnvironmentVariable("AbpZeroLicenseCode");
         Configuration.BackgroundJobs.IsJobExecutionEnabled = false;
         Configuration.ReplaceService(typeof(IEventBus), () =>
         {

@@ -1,4 +1,5 @@
-﻿using Abp.Dependency;
+﻿using System;
+using Abp.Dependency;
 using Abp.Extensions;
 using Microsoft.Extensions.Configuration;
 using HodHod.Configuration;
@@ -9,11 +10,11 @@ public class TwilioSmsSenderConfiguration : ITransientDependency
 {
     private readonly IConfigurationRoot _appConfiguration;
 
-    public string AccountSid => _appConfiguration["Twilio:AccountSid"];
+    public string AccountSid => Environment.GetEnvironmentVariable("Twilio:AccountSid");
 
-    public string AuthToken => _appConfiguration["Twilio:AuthToken"];
+    public string AuthToken => Environment.GetEnvironmentVariable("Twilio:AuthToken");
 
-    public string SenderNumber => _appConfiguration["Twilio:SenderNumber"];
+    public string SenderNumber => Environment.GetEnvironmentVariable("Twilio:SenderNumber");
 
     public TwilioSmsSenderConfiguration(IAppConfigurationAccessor configurationAccessor)
     {

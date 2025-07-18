@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Abp.AspNetZeroCore;
 using Abp.AspNetZeroCore.Web.Authentication.External;
 using Abp.AspNetZeroCore.Web.Authentication.External.Facebook;
@@ -43,9 +44,14 @@ public class HodHodWebHostModule : AbpModule
 
     public override void PreInitialize()
     {
+        //Configuration.Modules.AbpWebCommon().MultiTenancy.DomainFormat =
+        //    Environment.GetEnvironmentVariable("App:ServerRootAddress"] ?? "https://localhost:44301/";
+        //Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("AbpZeroLicenseCode"];
         Configuration.Modules.AbpWebCommon().MultiTenancy.DomainFormat =
-            _appConfiguration["App:ServerRootAddress"] ?? "https://localhost:44301/";
-        Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
+            Environment.GetEnvironmentVariable("App_ServerRootAddress") ?? "https://localhost:44301/";
+
+        Configuration.Modules.AspNetZero().LicenseCode =
+            Environment.GetEnvironmentVariable("AbpZeroLicenseCode");
     }
 
     public override void Initialize()
@@ -57,10 +63,14 @@ public class HodHodWebHostModule : AbpModule
     {
         using (var scope = IocManager.CreateScope())
         {
-            if (!scope.Resolve<DatabaseCheckHelper>().Exist(_appConfiguration["ConnectionStrings:Default"]))
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                                   ?? _appConfiguration.GetConnectionString("Default");
+
+            if (!scope.Resolve<DatabaseCheckHelper>().Exist(connectionString))
             {
                 return;
             }
+
         }
 
         var workManager = IocManager.Resolve<IBackgroundWorkerManager>();
@@ -86,9 +96,11 @@ public class HodHodWebHostModule : AbpModule
     {
         var externalAuthConfiguration = IocManager.Resolve<ExternalAuthConfiguration>();
 
-        if (bool.Parse(_appConfiguration["Authentication:OpenId:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:OpenId:IsEnabled"), out var openIdEnabled);
+        if (openIdEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedOpenIdConnectExternalLoginInfoProvider>());
@@ -100,21 +112,23 @@ public class HodHodWebHostModule : AbpModule
 
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     new OpenIdConnectExternalLoginInfoProvider(
-                        _appConfiguration["Authentication:OpenId:ClientId"],
-                        _appConfiguration["Authentication:OpenId:ClientSecret"],
-                        _appConfiguration["Authentication:OpenId:Authority"],
-                        _appConfiguration["Authentication:OpenId:LoginUrl"],
-                        bool.Parse(_appConfiguration["Authentication:OpenId:ValidateIssuer"]),
-                        _appConfiguration["Authentication:OpenId:ResponseType"],
+                        Environment.GetEnvironmentVariable("Authentication:OpenId:ClientId"),
+                        Environment.GetEnvironmentVariable("Authentication:OpenId:ClientSecret"),
+                        Environment.GetEnvironmentVariable("Authentication:OpenId:Authority"),
+                        Environment.GetEnvironmentVariable("Authentication:OpenId:LoginUrl"),
+                        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:OpenId:ValidateIssuer"), out var validateIssuer) && validateIssuer,
+                        Environment.GetEnvironmentVariable("Authentication:OpenId:ResponseType"),
                         jsonClaimMappings
                     )
                 );
             }
         }
 
-        if (bool.Parse(_appConfiguration["Authentication:WsFederation:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:WsFederation:IsEnabled"), out var wsFedEnabled);
+        if (wsFedEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedWsFederationExternalLoginInfoProvider>());
@@ -126,19 +140,20 @@ public class HodHodWebHostModule : AbpModule
 
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     new WsFederationExternalLoginInfoProvider(
-                        _appConfiguration["Authentication:WsFederation:ClientId"],
-                        _appConfiguration["Authentication:WsFederation:Tenant"],
-                        _appConfiguration["Authentication:WsFederation:MetaDataAddress"],
-                        _appConfiguration["Authentication:WsFederation:Authority"],
-                        jsonClaimMappings
-                    )
+                        Environment.GetEnvironmentVariable("Authentication:WsFederation:ClientId"),
+                        Environment.GetEnvironmentVariable("Authentication:WsFederation:Tenant"),
+                        Environment.GetEnvironmentVariable("Authentication:WsFederation:MetaDataAddress"),
+                        Environment.GetEnvironmentVariable("Authentication:WsFederation:Authority"),
+                        jsonClaimMappings)
                 );
             }
         }
 
-        if (bool.Parse(_appConfiguration["Authentication:Facebook:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:Facebook:IsEnabled"), out var fbEnabled);
+        if (fbEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedFacebookExternalLoginInfoProvider>());
@@ -146,15 +161,17 @@ public class HodHodWebHostModule : AbpModule
             else
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(new FacebookExternalLoginInfoProvider(
-                    _appConfiguration["Authentication:Facebook:AppId"],
-                    _appConfiguration["Authentication:Facebook:AppSecret"]
+                    Environment.GetEnvironmentVariable("Authentication:Facebook:AppId"),
+                    Environment.GetEnvironmentVariable("Authentication:Facebook:AppSecret")
                 ));
             }
         }
 
-        if (bool.Parse(_appConfiguration["Authentication:Twitter:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:Twitter:IsEnabled"), out var twitterEnabled);
+        if (twitterEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedTwitterExternalLoginInfoProvider>());
@@ -162,18 +179,20 @@ public class HodHodWebHostModule : AbpModule
             else
             {
                 var twitterExternalLoginInfoProvider = new TwitterExternalLoginInfoProvider(
-                    _appConfiguration["Authentication:Twitter:ConsumerKey"],
-                    _appConfiguration["Authentication:Twitter:ConsumerSecret"],
-                    _appConfiguration["App:ClientRootAddress"].EnsureEndsWith('/') + "account/login"
+                    Environment.GetEnvironmentVariable("Authentication:Twitter:ConsumerKey"),
+                    Environment.GetEnvironmentVariable("Authentication:Twitter:ConsumerSecret"),
+                    Environment.GetEnvironmentVariable("App:ClientRootAddress").EnsureEndsWith('/') + "account/login"
                 );
 
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(twitterExternalLoginInfoProvider);
             }
         }
 
-        if (bool.Parse(_appConfiguration["Authentication:Google:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:Google:IsEnabled"), out var googleEnabled);
+        if (googleEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedGoogleExternalLoginInfoProvider>());
@@ -182,17 +201,19 @@ public class HodHodWebHostModule : AbpModule
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     new GoogleExternalLoginInfoProvider(
-                        _appConfiguration["Authentication:Google:ClientId"],
-                        _appConfiguration["Authentication:Google:ClientSecret"],
-                        _appConfiguration["Authentication:Google:UserInfoEndpoint"]
+                        Environment.GetEnvironmentVariable("Authentication:Google:ClientId"),
+                        Environment.GetEnvironmentVariable("Authentication:Google:ClientSecret"),
+                        Environment.GetEnvironmentVariable("Authentication:Google:UserInfoEndpoint")
                     )
                 );
             }
         }
 
-        if (bool.Parse(_appConfiguration["Authentication:Microsoft:IsEnabled"]))
+        bool.TryParse(Environment.GetEnvironmentVariable("Authentication:Microsoft:IsEnabled"), out var msEnabled);
+        if (msEnabled)
         {
-            if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
+            bool.TryParse(Environment.GetEnvironmentVariable("Authentication:AllowSocialLoginSettingsPerTenant"), out var perTenant);
+            if (perTenant)
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     IocManager.Resolve<TenantBasedMicrosoftExternalLoginInfoProvider>());
@@ -201,12 +222,13 @@ public class HodHodWebHostModule : AbpModule
             {
                 externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                     new MicrosoftExternalLoginInfoProvider(
-                        _appConfiguration["Authentication:Microsoft:ConsumerKey"],
-                        _appConfiguration["Authentication:Microsoft:ConsumerSecret"]
+                        Environment.GetEnvironmentVariable("Authentication:Microsoft:ConsumerKey"),
+                        Environment.GetEnvironmentVariable("Authentication:Microsoft:ConsumerSecret")
                     )
                 );
             }
         }
     }
+
 }
 

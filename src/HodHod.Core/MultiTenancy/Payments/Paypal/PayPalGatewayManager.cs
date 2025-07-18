@@ -19,7 +19,7 @@ public class PayPalGatewayManager : HodHodServiceBase, ITransientDependency
 
     private PayPalEnvironment GetEnvironment(PayPalPaymentGatewayConfiguration configuration)
     {
-        switch (configuration.Environment)
+        switch (configuration.PayPalEnvironment)
         {
             case "sandbox":
                 {

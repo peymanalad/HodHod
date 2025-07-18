@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Abp.Configuration;
 using Abp.Extensions;
@@ -253,7 +254,7 @@ public class AppSettingProvider : SettingProvider
 
     private string GetFromSettings(string name, string defaultValue = null)
     {
-        return _appConfiguration[name] ?? defaultValue;
+        return Environment.GetEnvironmentVariable(name) ?? defaultValue;
     }
 
     private IEnumerable<SettingDefinition> GetDefaultThemeSettings()

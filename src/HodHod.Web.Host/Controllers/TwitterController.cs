@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Abp.AspNetZeroCore.Web.Authentication.External;
 using Abp.AspNetZeroCore.Web.Authentication.External.Twitter;
@@ -38,7 +39,7 @@ public class TwitterController : HodHodControllerBase
         }
 
         var loginInfo = loginInfoProvider.GetExternalLoginInfo();
-        var callbackUrl = _appConfiguration["App:ClientRootAddress"].EnsureEndsWith('/') + "account/login";
+        var callbackUrl = Environment.GetEnvironmentVariable("App:ClientRootAddress").EnsureEndsWith('/') + "account/login";
 
         var twitter = new TwitterAuthProviderApi();
         return await twitter.GetRequestToken(

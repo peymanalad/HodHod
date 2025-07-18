@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Abp.Extensions;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,7 @@ public abstract class WebUrlServiceBase
     {
         get
         {
-            var webSiteRootAddress = _appConfiguration[WebSiteRootAddressFormatKey];
+            var webSiteRootAddress = Environment.GetEnvironmentVariable(WebSiteRootAddressFormatKey);
             return string.IsNullOrWhiteSpace(webSiteRootAddress) ? "https://localhost:44302/" : webSiteRootAddress;
         }
     }
@@ -27,7 +28,7 @@ public abstract class WebUrlServiceBase
     {
         get
         {
-            var serverRootAddress = _appConfiguration[ServerRootAddressFormatKey];
+            var serverRootAddress = Environment.GetEnvironmentVariable(ServerRootAddressFormatKey);
             return string.IsNullOrWhiteSpace(serverRootAddress) ? "https://localhost:44302/" : serverRootAddress;
         }
     }
@@ -60,7 +61,7 @@ public abstract class WebUrlServiceBase
 
     public List<string> GetRedirectAllowedExternalWebSites()
     {
-        var values = _appConfiguration["App:RedirectAllowedExternalWebSites"];
+        var values = Environment.GetEnvironmentVariable("App:RedirectAllowedExternalWebSites");
         return values?.Split(',').ToList() ?? new List<string>();
     }
 
