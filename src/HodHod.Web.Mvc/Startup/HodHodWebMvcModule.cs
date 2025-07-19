@@ -4,6 +4,7 @@ using Abp.Dependency;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Abp.Threading.BackgroundWorkers;
+using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using HodHod.Auditing;
@@ -51,7 +52,11 @@ public class HodHodWebMvcModule : AbpModule
 
         using (var scope = IocManager.CreateScope())
         {
-            if (!scope.Resolve<DatabaseCheckHelper>().Exist(_appConfiguration["ConnectionStrings:Default"]))
+            var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                        ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                        ?? _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+
+            if (!scope.Resolve<DatabaseCheckHelper>().Exist(conn))
             {
                 return;
             }

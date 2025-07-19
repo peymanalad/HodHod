@@ -27,7 +27,15 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PreInitialize()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                              ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var configuration = AppConfigurations.Get(
+                typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull());
+            connectionString = configuration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        }
 
         if (!SkipDbContextRegistration)
         {
@@ -61,7 +69,15 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PostInitialize()
     {
-        var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
+
+        if (string.IsNullOrEmpty(dbConnectionString))
+        {
+            var configuration = AppConfigurations.Get(
+                typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull());
+            dbConnectionString = configuration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        }
 
         using (var scope = IocManager.CreateScope())
         {

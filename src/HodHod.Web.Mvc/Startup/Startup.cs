@@ -216,8 +216,12 @@ public class Startup
 
         using (var scope = app.ApplicationServices.CreateScope())
         {
+            var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                        ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                        ?? _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+
             if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
-                .Exist(_appConfiguration["ConnectionStrings:Default"]))
+                .Exist(conn))
             {
                 app.UseAbpRequestLocalization();
             }

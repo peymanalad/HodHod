@@ -148,7 +148,9 @@ public class Startup
             services.AddHangfire(config =>
             {
                 //config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
-                var dbConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? _appConfiguration.GetConnectionString("Default");
+                var dbConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                             ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                             ?? _appConfiguration.GetConnectionString("Default");
                 config.UseSqlServerStorage(dbConn);
             });
 
@@ -224,8 +226,12 @@ public class Startup
 
         using (var scope = app.ApplicationServices.CreateScope())
         {
+            var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                        ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                        ?? _appConfiguration.GetConnectionString("Default");
+
             if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
-                .Exist(Environment.GetEnvironmentVariable("ConnectionStrings:Default")))
+                .Exist(conn))
             {
                 app.UseAbpRequestLocalization();
             }
