@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HodHod.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -1216,15 +1216,24 @@ namespace HodHod.Migrations
                 name: "AppReports",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     SubCategoryId = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", maxLength: 4096, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
                     Longitude = table.Column<double>(type: "float", nullable: true),
                     Latitude = table.Column<double>(type: "float", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: true),
+                    PhoneNumber = table.Column<long>(type: "bigint", nullable: false),
+                    Province = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    PersianCreationTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
+                    PersianLastModificationTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
+                    PersianDeletionTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    IsReferred = table.Column<bool>(type: "bit", nullable: false),
+                    IsStarred = table.Column<bool>(type: "bit", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
                     LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -1294,7 +1303,7 @@ namespace HodHod.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ReportId = table.Column<long>(type: "bigint", nullable: false),
+                    ReportId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     FilePath = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),

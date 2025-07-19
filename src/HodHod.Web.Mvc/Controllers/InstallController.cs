@@ -58,7 +58,7 @@ public class InstallController : AbpController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Index(InstallSetupViewModel model)
     {
         if (!ModelState.IsValid)

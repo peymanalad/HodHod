@@ -44,7 +44,7 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         _tempFileCacheManager = tempFileCacheManager;
     }
 
-    public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles()
+    public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles([FromForm] IFormCollection form)
     {
         var files = _httpContextAccessor.HttpContext?.Request?.Form?.Files;
         if (files == null || files.Count == 0)

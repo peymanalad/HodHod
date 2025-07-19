@@ -60,6 +60,7 @@ public class Startup
 
     public Startup(IWebHostEnvironment env)
     {
+        DotNetEnv.Env.TraversePath().Load();
         _hostingEnvironment = env;
         _appConfiguration = env.GetAppConfiguration();
     }
@@ -68,11 +69,9 @@ public class Startup
     {
         services.Configure<FormOptions>(options =>
         {
-            //options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
             options.MultipartBodyLengthLimit = long.MaxValue;
         });
 
-        //MVC
         var mvcBuilder = services.AddControllersWithViews(options =>
         {
             options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
@@ -84,29 +83,19 @@ public class Startup
 
         services.AddSignalR();
 
-        //Configure CORS for angular2 UI
         services.AddCors(options =>
         {
             options.AddPolicy(DefaultCorsPolicyName, builder =>
             {
-                //App:CorsOrigins in appsettings.json can contain more than one address with splitted by comma.
                 builder
-                    //.WithOrigins(
-                    //    // App:CorsOrigins in appsettings.json can contain more than one address separated by comma.
-                    //    Environment.GetEnvironmentVariable("App:CorsOrigins"]
-                    //        .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                    //        .Select(o => o.RemovePostFix("/"))
-                    //        .ToArray()
-                    //)
-                    //.SetIsOriginAllowedToAllowWildcardSubdomains()
-                    .SetIsOriginAllowed(_=> true)
+                    .SetIsOriginAllowed(_ => true)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
             });
         });
 
-        if (bool.Parse(Environment.GetEnvironmentVariable("KestrelServer:IsEnabled") ?? "false"))
+        if (AppSettingProvider.GetBool("KestrelServer__IsEnabled", _appConfiguration))
         {
             ConfigureKestrel(services);
         }
@@ -114,7 +103,7 @@ public class Startup
         IdentityRegistrar.Register(services);
         AuthConfigurer.Configure(services, _appConfiguration);
 
-        if (bool.TryParse(Environment.GetEnvironmentVariable("OpenIddict:IsEnabled"), out var isEnabled) && isEnabled)
+        if (AppSettingProvider.GetBool("OpenIddict__IsEnabled", _appConfiguration))
         {
             OpenIddictRegistrar.Register(services, _appConfiguration);
             services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme,
@@ -128,27 +117,23 @@ public class Startup
 
         if (WebConsts.SwaggerUiEnabled)
         {
-            //Swagger - Enable this line and the related lines in Configure method to enable swagger UI
             ConfigureSwagger(services);
         }
 
         services.AddPasswordlessLoginRateLimit();
         services.AddReportRateLimit();
 
-        //Recaptcha
         services.AddreCAPTCHAV3(x =>
         {
-            x.SiteKey = Environment.GetEnvironmentVariable("Recaptcha:SiteKey");
-            x.SiteSecret = Environment.GetEnvironmentVariable("Recaptcha:SecretKey");
+            x.SiteKey = AppSettingProvider.Get("Recaptcha__SiteKey", _appConfiguration);
+            x.SiteSecret = AppSettingProvider.Get("Recaptcha__SecretKey", _appConfiguration);
         });
 
         if (WebConsts.HangfireDashboardEnabled)
         {
-            //Hangfire(Enable to use Hangfire instead of default job manager)
             services.AddHangfire(config =>
             {
-                //config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
-                var dbConn = ConnectionStringProvider.Get(_appConfiguration);
+                var dbConn = AppSettingProvider.Get("DB_CONNECTION_STRING", _appConfiguration);
                 config.UseSqlServerStorage(dbConn);
             });
 
@@ -160,15 +145,13 @@ public class Startup
             services.AddAndConfigureGraphQL();
         }
 
-        if (bool.TryParse(Environment.GetEnvironmentVariable("HealthChecks:HealthChecksEnabled"), out var healthChecksEnabled) && healthChecksEnabled)
+        if (AppSettingProvider.GetBool("HealthChecks__HealthChecksEnabled", _appConfiguration))
         {
             ConfigureHealthChecks(services);
         }
 
-        //Configure Abp and Dependency Injection
         return services.AddAbp<HodHodWebHostModule>(options =>
         {
-            //Configure Log4Net logging
             options.IocManager.IocContainer.AddFacility<LoggingFacility>(
                 f => f.UseAbpLog4Net().WithConfig(_hostingEnvironment.IsDevelopment()
                     ? "log4net.config"
@@ -182,10 +165,9 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
     {
-        //Initializes ABP framework.
         app.UseAbp(options =>
         {
-            options.UseAbpRequestLocalization = false; //used below: UseAbpRequestLocalization
+            options.UseAbpRequestLocalization = false;
         });
 
         if (env.IsDevelopment())
@@ -201,7 +183,6 @@ public class Startup
 
         app.UseStaticFiles();
 
-#pragma warning disable CS0162
         if (HodHodConsts.PreventNotExistingTenantSubdomains)
         {
             app.UseMiddleware<DomainTenantCheckMiddleware>();
@@ -209,13 +190,13 @@ public class Startup
 
         app.UseRouting();
 
-        app.UseCors(DefaultCorsPolicyName); //Enable CORS!
+        app.UseCors(DefaultCorsPolicyName);
         app.UseRateLimiter();
 
         app.UseAuthentication();
         app.UseJwtTokenMiddleware();
 
-        if (bool.Parse(Environment.GetEnvironmentVariable("OpenIddict_IsEnabled")))
+        if (AppSettingProvider.GetBool("OpenIddict__IsEnabled", _appConfiguration))
         {
             app.UseAbpOpenIddictValidation();
         }
@@ -224,10 +205,9 @@ public class Startup
 
         using (var scope = app.ApplicationServices.CreateScope())
         {
-            var conn = ConnectionStringProvider.Get(_appConfiguration);
+            var conn = AppSettingProvider.Get("DB_CONNECTION_STRING", _appConfiguration);
 
-            if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
-                .Exist(conn))
+            if (scope.ServiceProvider.GetService<DatabaseCheckHelper>().Exist(conn))
             {
                 app.UseAbpRequestLocalization();
             }
@@ -235,7 +215,6 @@ public class Startup
 
         if (WebConsts.HangfireDashboardEnabled)
         {
-            //Hangfire dashboard &server(Enable to use Hangfire instead of default job manager)
             app.UseHangfireDashboard(WebConsts.HangfireDashboardEndPoint, new DashboardOptions
             {
                 Authorization = new[]
@@ -243,9 +222,9 @@ public class Startup
             });
         }
 
-        if (bool.Parse(Environment.GetEnvironmentVariable("Payment_Stripe_IsActive")))
+        if (AppSettingProvider.GetBool("Payment__Stripe__IsActive", _appConfiguration))
         {
-            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("Payment_Stripe_SecretKey");
+            StripeConfiguration.ApiKey = AppSettingProvider.Get("Payment__Stripe__SecretKey", _appConfiguration);
         }
 
         if (WebConsts.GraphQL.Enabled)
@@ -253,11 +232,7 @@ public class Startup
             app.UseGraphQL<MainSchema>(WebConsts.GraphQL.EndPoint);
             if (WebConsts.GraphQL.PlaygroundEnabled)
             {
-                // to explorer API navigate https://*DOMAIN*/ui/playground
-                app.UseGraphQLPlayground(
-                    WebConsts.GraphQL.PlaygroundEndPoint,
-                    new PlaygroundOptions()
-                );
+                app.UseGraphQLPlayground(WebConsts.GraphQL.PlaygroundEndPoint, new PlaygroundOptions());
             }
         }
 
@@ -274,7 +249,7 @@ public class Startup
                 .ConfigureAllEndpoints(endpoints);
         });
 
-        if (bool.Parse(Environment.GetEnvironmentVariable("HealthChecks_HealthChecksEnabled")))
+        if (AppSettingProvider.GetBool("HealthChecks__HealthChecksEnabled", _appConfiguration))
         {
             app.UseHealthChecks("/health", new HealthCheckOptions()
             {
@@ -282,7 +257,7 @@ public class Startup
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
 
-            if (bool.Parse(Environment.GetEnvironmentVariable("HealthChecks_HealthChecksUI_HealthChecksUIEnabled")))
+            if (AppSettingProvider.GetBool("HealthChecks__HealthChecksUI__HealthChecksUIEnabled", _appConfiguration))
             {
                 app.UseHealthChecksUI();
             }
@@ -290,21 +265,17 @@ public class Startup
 
         if (WebConsts.SwaggerUiEnabled)
         {
-            // Enable middleware to serve generated Swagger as a JSON endpoint
             app.UseSwagger();
-            // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
-
             app.UseSwaggerUI(options =>
             {
-                var swaggerEndpoint = Environment.GetEnvironmentVariable("App_SwaggerEndPoint");
-                var serverRootAddress = Environment.GetEnvironmentVariable("App_ServerRootAddress");
+                var swaggerEndpoint = AppSettingProvider.Get("App__SwaggerEndPoint", _appConfiguration);
+                var serverRootAddress = AppSettingProvider.Get("App__ServerRootAddress", _appConfiguration);
 
                 options.SwaggerEndpoint(swaggerEndpoint, "HodHod API V1");
                 options.IndexStream = () => Assembly.GetExecutingAssembly()
                     .GetManifestResourceStream("HodHod.Web.wwwroot.swagger.ui.index.html");
                 options.InjectBaseUrl(serverRootAddress);
             });
-
         }
     }
 
@@ -312,19 +283,17 @@ public class Startup
     {
         services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
         {
-            options.Listen(new System.Net.IPEndPoint(System.Net.IPAddress.Any, 443),
-                listenOptions =>
-                {
-                    var certPassword = Environment.GetEnvironmentVariable("Kestrel_Certificates_Default_Password");
-                    var certPath = Environment.GetEnvironmentVariable("Kestrel_Certificates_Default_Path");
+            options.Listen(new System.Net.IPEndPoint(System.Net.IPAddress.Any, 443), listenOptions =>
+            {
+                var certPassword = AppSettingProvider.Get("Kestrel__Certificates__Default__Password", _appConfiguration);
+                var certPath = AppSettingProvider.Get("Kestrel__Certificates__Default__Path", _appConfiguration);
 
-                    var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath,
-                        certPassword);
-                    listenOptions.UseHttps(new HttpsConnectionAdapterOptions()
-                    {
-                        ServerCertificate = cert
-                    });
+                var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath, certPassword);
+                listenOptions.UseHttps(new HttpsConnectionAdapterOptions()
+                {
+                    ServerCertificate = cert
                 });
+            });
         });
     }
 
@@ -341,7 +310,6 @@ public class Startup
             options.OperationFilter<SwaggerOperationFilter>();
             options.CustomDefaultSchemaIdSelector();
 
-            //add summaries to swagger
             bool canShowSummaries = _appConfiguration.GetValue<bool>("Swagger:ShowSummaries");
             if (canShowSummaries)
             {
@@ -366,15 +334,13 @@ public class Startup
 
         var healthCheckUISection = _appConfiguration.GetSection("HealthChecks")?.GetSection("HealthChecksUI");
 
-        if (bool.Parse(healthCheckUISection["HealthChecksUIEnabled"]))
+        if (AppSettingProvider.GetBool("HealthChecks__HealthChecksUI__HealthChecksUIEnabled", _appConfiguration))
         {
             services.Configure<HealthChecksUISettings>(settings =>
             {
                 healthCheckUISection.Bind(settings, c => c.BindNonPublicProperties = true);
             });
-            services.AddHealthChecksUI()
-                .AddInMemoryStorage();
+            services.AddHealthChecksUI().AddInMemoryStorage();
         }
     }
 }
-

@@ -10,13 +10,13 @@ namespace HodHod.Configuration
             // Check well known environment variables first
             string[] names = new[]
             {
+                "Default",
                 "DB_CONNECTION_STRING",
                 $"ConnectionStrings__{HodHodConsts.ConnectionStringName}",
                 $"ConnectionStrings:{HodHodConsts.ConnectionStringName}",
                 HodHodConsts.ConnectionStringName,
                 $"{HodHodConsts.ConnectionStringName}_CONNECTION_STRING",
                 "DefaultConnection",
-                "Default"
             };
 
             foreach (var name in names)

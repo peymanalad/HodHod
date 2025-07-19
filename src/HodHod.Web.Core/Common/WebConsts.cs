@@ -8,7 +8,7 @@ public static class WebConsts
     public const string HangfireDashboardEndPoint = "/hangfire";
 
     public static bool SwaggerUiEnabled = true;
-    public static bool HangfireDashboardEnabled = false;
+    public static bool HangfireDashboardEnabled = true;
 
     public static List<string> ReCaptchaIgnoreWhiteList = new List<string>
         {
