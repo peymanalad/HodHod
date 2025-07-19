@@ -109,11 +109,11 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
     private bool CheckDatabaseInternal()
     {
         //var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-        var connectionString = Environment.GetEnvironmentVariable($"ConnectionStrings:{HodHodConsts.ConnectionStringName}");
-
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
         if (string.IsNullOrEmpty(connectionString))
         {
-            return false;
+            connectionString = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
         }
 
         return _databaseCheckHelper.Exist(connectionString);

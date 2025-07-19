@@ -54,21 +54,13 @@ public class HodHodWebCoreModule : AbpModule
     public override void PreInitialize()
     {
         //Set default connection string
-        Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-            HodHodConsts.ConnectionStringName
-        );
-        //var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-        //if (string.IsNullOrEmpty(envConnection))
-        //{
-        //    envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"/* + HodHodConsts.ConnectionStringName*/);
-        //}
-        ////var envConnection = Environment.GetEnvironmentVariable("ConnectionStrings__" + HodHodConsts.ConnectionStringName);
-        //if (string.IsNullOrEmpty(envConnection))
-        //{
-        //    envConnection = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
-        //}
+        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                            ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
 
-        //Configuration.DefaultNameOrConnectionString = envConnection;
+        if (string.IsNullOrEmpty(envConnection))
+        {
+            envConnection = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        }
 
         //Use database for language management
         Configuration.Modules.Zero().LanguageManagement.EnableDbLocalization();

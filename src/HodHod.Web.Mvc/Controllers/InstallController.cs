@@ -40,8 +40,9 @@ public class InstallController : AbpController
     public ActionResult Index()
     {
         var appSettings = _installAppService.GetAppSettingsJson();
-        var connectionString = _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
-
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                               ?? _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
         if (_databaseCheckHelper.Exist(connectionString))
         {
             return RedirectToAction("Index", "Home");

@@ -7,8 +7,8 @@
       "commandName": "Docker",
       "environmentVariables": {
         "ASPNETCORE_Docker_Enabled": "true",
-        //"ConnectionStrings__Default": "Server=mssqlDb;Database=HodHodDb;User=sa;Password=Super_Encrypted_Passw0rd!",
-        "ConnectionStrings__Default": ""
+        "ConnectionStrings__Default": "Server=localhost;Database=HodHodDb;Trusted_Connection=True; TrustServerCertificate=True;"
+        //"ConnectionStrings__Default": ""
 
       }
     }

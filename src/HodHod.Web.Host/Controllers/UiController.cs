@@ -57,7 +57,11 @@ public class UiController : HodHodControllerBase
     {
         var model = new HomePageModel();
 
-        if (_databaseCheckHelper.Exist(Environment.GetEnvironmentVariable($"ConnectionStrings:{HodHodConsts.ConnectionStringName}")))
+        var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                   ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                   ?? _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
+
+        if (_databaseCheckHelper.Exist(conn))
         {
             model.LoginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
             model.IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled;
