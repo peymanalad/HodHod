@@ -9,7 +9,7 @@ namespace HodHod.Reports;
 [Table("AppReportFiles")]
 public class ReportFile : CreationAuditedEntity<Guid>
 {
-    public long ReportId { get; set; }
+    public Guid ReportId { get; set; }
 
     [ForeignKey(nameof(ReportId))]
     public Report Report { get; set; }

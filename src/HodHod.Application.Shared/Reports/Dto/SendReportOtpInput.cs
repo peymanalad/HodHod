@@ -12,7 +12,7 @@ public class SendReportOtpInput
     public int SubCategoryId { get; set; }
 
     [Required]
-    [StringLength(4096)]
+    [StringLength(4000)]
     public string Description { get; set; }
 
     [StringLength(1024)]

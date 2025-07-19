@@ -189,9 +189,12 @@ internal static class CustomDtoMapper
         configuration.CreateMap<CreateSubCategoryDto, SubCategory>();
         configuration.CreateMap<UpdateSubCategoryDto, SubCategory>();
         configuration.CreateMap<Report, ReportDto>()
-            .ForMember(d => d.FilePaths, opt 
-                => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()));
-        configuration.CreateMap<CreateReportDto, Report>();
+            .ForMember(d => d.FilePaths, opt
+                => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => r.PhoneNumber.ToString()));
+
+        configuration.CreateMap<CreateReportDto, Report>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }

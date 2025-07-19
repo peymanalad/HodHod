@@ -8,7 +8,7 @@ using HodHod.Categories;
 namespace HodHod.Reports;
 
 [Table("AppReports")]
-public class Report : FullAuditedEntity<long>
+public class Report : FullAuditedEntity<Guid>
 {
     [Required]
     public int CategoryId { get; set; }
@@ -23,7 +23,7 @@ public class Report : FullAuditedEntity<long>
     public SubCategory SubCategory { get; set; }
 
     [Required]
-    [StringLength(4096)]
+    [StringLength(4000)]
     public string Description { get; set; }
 
     [StringLength(1024)]
@@ -32,8 +32,30 @@ public class Report : FullAuditedEntity<long>
     public double? Longitude { get; set; }
     public double? Latitude { get; set; }
 
-    [StringLength(12)]
-    public string PhoneNumber { get; set; }
+    [Range(989000000000, 999999999999)]
+    public long PhoneNumber { get; set; }
+
+
+    [StringLength(50)]
+    public string Province { get; set; }
+
+    [StringLength(50)]
+    public string City { get; set; }
+
+    [StringLength(14)]
+    public string PersianCreationTime { get; set; }
+
+    [StringLength(14)]
+    public string PersianLastModificationTime { get; set; }
+
+    [StringLength(14)]
+    public string PersianDeletionTime { get; set; }
+
+    public ReportStatus Status { get; set; }
+    public ReportPriority Priority { get; set; }
+    public bool IsReferred { get; set; }
+    public bool IsStarred { get; set; }
+    public bool IsArchived { get; set; }
 
     public ICollection<ReportFile> Files { get; set; }
 

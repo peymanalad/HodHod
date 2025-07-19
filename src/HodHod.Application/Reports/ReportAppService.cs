@@ -20,7 +20,7 @@ namespace HodHod.Reports;
 [AbpAllowAnonymous]
 public class ReportAppService : HodHodAppServiceBase, IReportAppService
 {
-    private readonly IRepository<Report, long> _reportRepository;
+    private readonly IRepository<Report, Guid> _reportRepository;
     private readonly IRepository<ReportFile, Guid> _reportFileRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
@@ -29,7 +29,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly ISmsSender _smsSender;
     private readonly ICacheManager _cacheManager;
     public ReportAppService(
-        IRepository<Report, long> reportRepository,
+        IRepository<Report, Guid> reportRepository,
         IRepository<ReportFile, Guid> reportFileRepository,
         //IBinaryObjectManager binaryObjectManager,
         ITempFileCacheManager tempFileCacheManager,
@@ -96,7 +96,15 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             Address = input.Address,
             Longitude = input.Longitude,
             Latitude = input.Latitude,
-            PhoneNumber = normalized
+            PhoneNumber = long.Parse(normalized),
+            Province = input.Province,
+            City = input.City,
+            PersianCreationTime = PersianDateTimeHelper.ToCompactPersianString(Clock.Now),
+            Status = ReportStatus.New,
+            //Priority = input.Priority,
+            IsReferred = false,
+            IsStarred = false,
+            IsArchived = false
         };
 
         await _reportRepository.InsertAsync(report);

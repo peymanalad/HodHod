@@ -12,7 +12,7 @@ public class CreateReportDto
     public int SubCategoryId { get; set; }
 
     [Required]
-    [StringLength(4096)]
+    [StringLength(4000)]
     public string Description { get; set; }
 
     [StringLength(1024)]
@@ -21,6 +21,14 @@ public class CreateReportDto
     public double? Longitude { get; set; }
 
     public double? Latitude { get; set; }
+
+    [StringLength(50)]
+    public string Province { get; set; }
+
+    [StringLength(50)]
+    public string City { get; set; }
+
+    //public ReportPriority Priority { get; set; }
 
     [Required]
     public string PhoneNumber { get; set; }

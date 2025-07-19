@@ -9,5 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HodHod.Core.Shared\HodHod.Core.Shared.csproj" />
+    <ProjectReference Include="..\HodHod.Core\HodHod.Core.csproj" />
   </ItemGroup>
 </Project>

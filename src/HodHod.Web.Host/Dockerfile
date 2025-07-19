@@ -1,11 +1,11 @@
 ﻿# Use official ASP.NET 9.0 runtime as base image
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM microsoft.repo.stinascloud.ir/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
 # Use official .NET SDK 9.0 for building the app
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM microsoft.repo.stinascloud.ir/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy project files
@@ -22,7 +22,7 @@ COPY ["src/Abp.AspNetZeroCore/Abp.AspNetZeroCore.csproj", "src/Abp.AspNetZeroCor
 
 # Restore dependencies from custom NuGet source (Nexus)
 RUN dotnet restore "src/HodHod.Web.Host/HodHod.Web.Host.csproj" \
-    -s "https://api.nuget.org/v3/index.json"    
+    -s "https://nexus.repo.stinascloud.ir/repository/nuget/index.json"    
 
 # Copy everything else
 COPY . .
