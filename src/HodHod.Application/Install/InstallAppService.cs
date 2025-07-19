@@ -110,7 +110,8 @@ public class InstallAppService : HodHodAppServiceBase, IInstallAppService
     {
         //var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
         var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
+                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                               ?? _appConfiguration.GetConnectionString("Default");
         if (string.IsNullOrEmpty(connectionString))
         {
             connectionString = _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);

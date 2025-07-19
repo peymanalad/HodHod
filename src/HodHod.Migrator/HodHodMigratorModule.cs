@@ -40,7 +40,8 @@ public class HodHodMigratorModule : AbpModule
         //Configuration.DefaultNameOrConnectionString = envConnection;
         //Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("AbpZeroLicenseCode"];
         var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                            ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
+                            ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
+                            ?? _appConfiguration.GetConnectionString("Default");
         Configuration.DefaultNameOrConnectionString = !string.IsNullOrEmpty(envConnection)
             ? envConnection
             : _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);

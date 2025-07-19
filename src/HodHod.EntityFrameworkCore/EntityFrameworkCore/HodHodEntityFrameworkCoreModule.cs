@@ -71,6 +71,7 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
         var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
                                  ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
 
+
         if (string.IsNullOrEmpty(dbConnectionString))
         {
             var configuration = AppConfigurations.Get(
