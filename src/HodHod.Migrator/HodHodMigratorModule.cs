@@ -28,23 +28,8 @@ public class HodHodMigratorModule : AbpModule
 
     public override void PreInitialize()
     {
-        //Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-        //    HodHodConsts.ConnectionStringName
-        //    );
-        //var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-        //if (string.IsNullOrEmpty(envConnection))
-        //{
-        //    envConnection = _appConfiguration.GetConnectionString(
-        //        HodHodConsts.ConnectionStringName);
-        //}
-        //Configuration.DefaultNameOrConnectionString = envConnection;
-        //Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("AbpZeroLicenseCode"];
-        var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                            ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
-                            ?? _appConfiguration.GetConnectionString("Default");
-        Configuration.DefaultNameOrConnectionString = !string.IsNullOrEmpty(envConnection)
-            ? envConnection
-            : _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+        var envConnection = ConnectionStringProvider.Get(_appConfiguration);
+        Configuration.DefaultNameOrConnectionString = envConnection;
 
         Configuration.Modules.AspNetZero().LicenseCode = Environment.GetEnvironmentVariable("ABP_LICENSE_CODE")
                                                          ?? Environment.GetEnvironmentVariable("AbpZeroLicenseCode");

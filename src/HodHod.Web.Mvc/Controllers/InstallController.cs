@@ -4,6 +4,7 @@ using Abp.Domain.Uow;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System;
 using HodHod.Configuration;
 using HodHod.Configuration.Dto;
 using HodHod.Configuration.Host.Dto;
@@ -40,9 +41,8 @@ public class InstallController : AbpController
     public ActionResult Index()
     {
         var appSettings = _installAppService.GetAppSettingsJson();
-        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
-                               ?? _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
+        var connectionString = ConnectionStringProvider.Get(_appConfiguration);
+
         if (_databaseCheckHelper.Exist(connectionString))
         {
             return RedirectToAction("Index", "Home");

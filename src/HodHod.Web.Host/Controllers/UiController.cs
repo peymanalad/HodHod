@@ -57,9 +57,7 @@ public class UiController : HodHodControllerBase
     {
         var model = new HomePageModel();
 
-        var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                   ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
-                   ?? _appConfiguration[$"ConnectionStrings:{HodHodConsts.ConnectionStringName}"];
+        var conn = ConnectionStringProvider.Get(_appConfiguration);
 
         if (_databaseCheckHelper.Exist(conn))
         {

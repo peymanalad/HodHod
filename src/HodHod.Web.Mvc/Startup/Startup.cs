@@ -124,7 +124,7 @@ public class Startup
             // Hangfire (Enable to use Hangfire instead of default job manager)
             services.AddHangfire(config =>
             {
-                config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
+                config.UseSqlServerStorage(ConnectionStringProvider.Get(_appConfiguration));
             });
 
             services.AddHangfireServer();
@@ -216,9 +216,7 @@ public class Startup
 
         using (var scope = app.ApplicationServices.CreateScope())
         {
-            var conn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                       ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
-                       ?? _appConfiguration.GetConnectionString(HodHodConsts.ConnectionStringName);
+            var conn = ConnectionStringProvider.Get(_appConfiguration);
 
             if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
                 .Exist(conn))

@@ -63,9 +63,7 @@ public class HodHodWebHostModule : AbpModule
     {
         using (var scope = IocManager.CreateScope())
         {
-            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                                   ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}")
-                                   ?? _appConfiguration.GetConnectionString("Default");
+            var connectionString = ConnectionStringProvider.Get(_appConfiguration);
 
             if (!scope.Resolve<DatabaseCheckHelper>().Exist(connectionString))
             {

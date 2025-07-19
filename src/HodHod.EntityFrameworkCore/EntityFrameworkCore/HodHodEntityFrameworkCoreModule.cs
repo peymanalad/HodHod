@@ -27,15 +27,9 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PreInitialize()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                               ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
-
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            var configuration = AppConfigurations.Get(
-                typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull());
-            connectionString = configuration.GetConnectionString(HodHodConsts.ConnectionStringName);
-        }
+        var configuration = AppConfigurations.Get(
+            typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull());
+        var connectionString = ConnectionStringProvider.Get(configuration);
         if (!SkipDbContextRegistration)
         {
             Configuration.Modules.AbpEfCore().AddDbContext<HodHodDbContext>(options =>
@@ -68,16 +62,9 @@ public class HodHodEntityFrameworkCoreModule : AbpModule
 
     public override void PostInitialize()
     {
-        var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                                 ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
-
-
-        if (string.IsNullOrEmpty(dbConnectionString))
-        {
-            var configuration = AppConfigurations.Get(
-                typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull());
-            dbConnectionString = configuration.GetConnectionString(HodHodConsts.ConnectionStringName);
-        }
+        var dbConnectionString = ConnectionStringProvider.Get(
+            AppConfigurations.Get(
+                typeof(HodHodEntityFrameworkCoreModule).GetAssembly().GetDirectoryPathOrNull()));
         using (var scope = IocManager.CreateScope())
         {
             var dbChecker = scope.Resolve<DatabaseCheckHelper>();

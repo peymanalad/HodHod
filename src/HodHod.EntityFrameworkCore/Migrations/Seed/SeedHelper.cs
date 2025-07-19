@@ -24,15 +24,8 @@ public static class SeedHelper
     public static void SeedHostDb(HodHodDbContext context)
     {
         context.SuppressAutoSetTenantId = true;
-        var dbConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                     ?? Environment.GetEnvironmentVariable($"ConnectionStrings__{HodHodConsts.ConnectionStringName}");
-
-        if (string.IsNullOrEmpty(dbConn))
-        {
-            var configuration = AppConfigurations.Get(typeof(SeedHelper).Assembly.GetDirectoryPathOrNull());
-            dbConn = configuration.GetConnectionString(HodHodConsts.ConnectionStringName);
-        }
-        //Host seed
+        var configuration = AppConfigurations.Get(typeof(SeedHelper).Assembly.GetDirectoryPathOrNull());
+        var dbConn = ConnectionStringProvider.Get(configuration);
         new InitialHostDbBuilder(context).Create();
 
         //Default tenant seed (in host database).
