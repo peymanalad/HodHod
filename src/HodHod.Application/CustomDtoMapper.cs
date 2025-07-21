@@ -183,11 +183,10 @@ internal static class CustomDtoMapper
         configuration.CreateMap<CreateUserDelegationDto, UserDelegation>();
 
         configuration.CreateMap<Category, CategoryDto>();
-        configuration.CreateMap<SubCategory, SubCategoryDto>();
+        configuration.CreateMap<SubCategory, SubCategoryDto>()
+            .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.CategoryId));
         configuration.CreateMap<CreateCategoryDto, Category>();
         configuration.CreateMap<UpdateCategoryDto, Category>();
-        configuration.CreateMap<CreateSubCategoryDto, SubCategory>();
-        configuration.CreateMap<UpdateSubCategoryDto, SubCategory>();
         configuration.CreateMap<Report, ReportDto>()
             .ForMember(d => d.FilePaths, opt
                 => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))

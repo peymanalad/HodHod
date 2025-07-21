@@ -137,6 +137,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 var savePath = Path.Combine(_appFolders.ReportFilesFolder, uniqueName);
 
                 File.WriteAllBytes(savePath, info.File);
+                _tempFileCacheManager.ClearFile(token);
 
                 await _reportFileRepository.InsertAsync(new ReportFile
                 {

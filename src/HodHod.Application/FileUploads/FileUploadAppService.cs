@@ -59,7 +59,6 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(ext))
             {
-                //throw new UserFriendlyException("Unsupported file type: " + ext);
                 throw new UserFriendlyException("نوع فایل نامعتبر است!");
 
             }

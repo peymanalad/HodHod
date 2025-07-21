@@ -8,6 +8,8 @@ using Abp.Linq.Extensions;
 using Microsoft.EntityFrameworkCore;
 using HodHod.Authorization;
 using HodHod.Categories.Dto;
+using System;
+using Abp.Domain.Entities;
 
 namespace HodHod.Categories;
 
@@ -37,19 +39,22 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     }
 
     [AbpAllowAnonymous]
-    public async Task<CategoryDto> Get(EntityDto<int> input)
+    public async Task<CategoryDto> Get(EntityDto<Guid> input)
     {
         var category = await _categoryRepository.GetAll()
             .Include(c => c.SubCategories)
-            .FirstAsync(c => c.Id == input.Id);
+            .FirstAsync(c => c.PublicId == input.Id);
         return ObjectMapper.Map<CategoryDto>(category);
     }
 
     [AbpAllowAnonymous]
-    public async Task<ListResultDto<SubCategoryDto>> GetSubCategories(EntityDto<int> input)
+    public async Task<ListResultDto<SubCategoryDto>> GetSubCategories(EntityDto<Guid> input)
     {
+        var category = await _categoryRepository
+            .GetAll()
+            .FirstOrDefaultAsync(c => c.PublicId == input.Id);
         var subs = await _subCategoryRepository.GetAll()
-            .Where(sc => sc.CategoryId == input.Id)
+            .Where(sc => sc.CategoryId == category.Id)
             .ToListAsync();
         return new ListResultDto<SubCategoryDto>(
             ObjectMapper.Map<List<SubCategoryDto>>(subs));
@@ -59,6 +64,7 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     public async Task<CategoryDto> Create(CreateCategoryDto input)
     {
         var category = ObjectMapper.Map<Category>(input);
+        category.PublicId = Guid.NewGuid();
         await _categoryRepository.InsertAsync(category);
         await CurrentUnitOfWork.SaveChangesAsync();
         return ObjectMapper.Map<CategoryDto>(category);
@@ -67,15 +73,35 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAuthorize(AppPermissions.Pages_Administration_Categories_Edit)]
     public async Task<CategoryDto> Update(UpdateCategoryDto input)
     {
-        var category = await _categoryRepository.GetAsync(input.Id);
+        var category = await _categoryRepository
+            .GetAll()
+            .FirstOrDefaultAsync(c => c.PublicId == input.PublicId);
+
+        if (category == null)
+        {
+            throw new EntityNotFoundException("Category not found");
+        }
+
         ObjectMapper.Map(input, category);
         await _categoryRepository.UpdateAsync(category);
+
         return ObjectMapper.Map<CategoryDto>(category);
     }
 
+
     [AbpAuthorize(AppPermissions.Pages_Administration_Categories_Delete)]
-    public async Task Delete(EntityDto<int> input)
+    public async Task Delete(EntityDto<Guid> input)
     {
-        await _categoryRepository.DeleteAsync(input.Id);
+        var category = await _categoryRepository
+            .GetAll()
+            .FirstOrDefaultAsync(c => c.PublicId == input.Id);
+
+        if (category == null)
+        {
+            throw new EntityNotFoundException("SubCategory no found");
+        }
+
+        await _categoryRepository.DeleteAsync(category);
     }
+
 }

@@ -77,15 +77,28 @@ public class HodHodWebCoreModule : AbpModule
             Configuration.BackgroundJobs.UseHangfire();
         }
 
-        //Uncomment this line to use Redis cache instead of in-memory cache.
-        //See app.config for Redis configuration and connection string
-        //Configuration.Caching.UseRedis(options =>
-        //{
-        //    options.ConnectionString = Environment.GetEnvironmentVariable("Abp:RedisCache:ConnectionString"];
-        //    options.DatabaseId = _appConfiguration.GetValue<int>("Abp:RedisCache:DatabaseId");
-        //});
+        // Configure Redis cache if a connection string is provided.
+        var redisConnection = Environment.GetEnvironmentVariable("Abp:RedisCache:ConnectionString") ??
+                              Environment.GetEnvironmentVariable("Abp__RedisCache__ConnectionString");
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            Configuration.Caching.UseRedis(options =>
+            {
+                options.ConnectionString = redisConnection;
 
-        // HTML Sanitizer configuration
+                var dbIdValue = Environment.GetEnvironmentVariable("Abp:RedisCache:DatabaseId") ??
+                                Environment.GetEnvironmentVariable("Abp__RedisCache__DatabaseId");
+                if (!string.IsNullOrWhiteSpace(dbIdValue) && int.TryParse(dbIdValue, out var dbId))
+                {
+                    options.DatabaseId = dbId;
+                }
+                else
+                {
+                    options.DatabaseId = _appConfiguration.GetValue<int>("Abp:RedisCache:DatabaseId");
+                }
+            });
+        }
+
         Configuration.Modules.AbpHtmlSanitizer()
             .KeepChildNodes()
             .AddSelector<IAccountAppService>(x => nameof(x.IsTenantAvailable))
@@ -126,13 +139,27 @@ public class HodHodWebCoreModule : AbpModule
     {
         var appFolders = IocManager.Resolve<AppFolders>();
 
-        appFolders.SampleProfileImagesFolder = Path.Combine(_env.WebRootPath,
-            $"Common{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}SampleProfilePics");
-        appFolders.WebLogsFolder = Path.Combine(_env.ContentRootPath, $"App_Data{Path.DirectorySeparatorChar}Logs");
+        var sampleProfileImagesFolder = Environment.GetEnvironmentVariable("AppFolders:SampleProfileImagesFolder") ??
+                                        Environment.GetEnvironmentVariable("AppFolders__SampleProfileImagesFolder");
+        appFolders.SampleProfileImagesFolder = !string.IsNullOrWhiteSpace(sampleProfileImagesFolder)
+            ? sampleProfileImagesFolder
+            : Path.Combine(_env.WebRootPath,
+                $"Common{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}SampleProfilePics");
 
-        appFolders.ReportFilesFolder = "/var/dockers/HodHodBackend/BinaryObjects";
+        var webLogsFolder = Environment.GetEnvironmentVariable("AppFolders:WebLogsFolder") ??
+                            Environment.GetEnvironmentVariable("AppFolders__WebLogsFolder");
+        appFolders.WebLogsFolder = !string.IsNullOrWhiteSpace(webLogsFolder)
+            ? webLogsFolder
+            : Path.Combine(_env.ContentRootPath, $"App_Data{Path.DirectorySeparatorChar}Logs");
+
+        var reportFilesFolder = Environment.GetEnvironmentVariable("AppFolders:ReportFilesFolder") ??
+                                Environment.GetEnvironmentVariable("AppFolders__ReportFilesFolder");
+        appFolders.ReportFilesFolder = !string.IsNullOrWhiteSpace(reportFilesFolder)
+            ? reportFilesFolder
+            : "/var/dockers/HodHodBackend/BinaryObjects";
 
         Directory.CreateDirectory(appFolders.ReportFilesFolder);
+        Directory.CreateDirectory(appFolders.WebLogsFolder);
     }
 }
 

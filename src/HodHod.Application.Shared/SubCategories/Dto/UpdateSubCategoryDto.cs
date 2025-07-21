@@ -1,11 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Abp.Application.Services.Dto;
 
 namespace HodHod.Categories.Dto;
 
-public class UpdateSubCategoryDto : EntityDto<int>
+public class UpdateSubCategoryDto
 {
-    public int CategoryId { get; set; }
+    public Guid PublicId { get; set; }
+    public Guid CategoryId { get; set; }
 
     [Required]
     [StringLength(256)]

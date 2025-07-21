@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
@@ -11,6 +12,7 @@ public class Category : FullAuditedEntity<int>
     [Required]
     [StringLength(256)]
     public string Name { get; set; }
+    public Guid PublicId { get; set; }
 
     public ICollection<SubCategory> SubCategories { get; set; }
 
