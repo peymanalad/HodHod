@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Abp.Authorization;
+using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Abp.Runtime.Caching;
 using Abp.Timing;
 using Abp.UI;
 using HodHod.Authorization.PasswordlessLogin;
+using HodHod.Categories;
 using HodHod.Net.Sms;
 using HodHod.Reports.Dto;
 using HodHod.Storage;
+using Microsoft.EntityFrameworkCore;
 using Twilio.TwiML.Voice;
 using Task = System.Threading.Tasks.Task;
 
@@ -22,6 +25,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 {
     private readonly IRepository<Report, Guid> _reportRepository;
     private readonly IRepository<ReportFile, Guid> _reportFileRepository;
+    private readonly IRepository<Category, int> _categoryRepository;
+    private readonly IRepository<SubCategory, int> _subCategoryRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
@@ -32,12 +37,14 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<Report, Guid> reportRepository,
         IRepository<ReportFile, Guid> reportFileRepository,
         //IBinaryObjectManager binaryObjectManager,
-        ITempFileCacheManager tempFileCacheManager,
-                //IPasswordlessLoginManager passwordlessLoginManager)
+        ITempFileCacheManager tempFileCacheManager, 
+        //IPasswordlessLoginManager passwordlessLoginManager)
         IPasswordlessLoginManager passwordlessLoginManager,
         IAppFolders appFolders,
         ISmsSender smsSender,
-        ICacheManager cacheManager)
+        ICacheManager cacheManager,
+        IRepository<Category, int> categoryRepository,
+        IRepository<SubCategory, int> subCategoryRepository)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -47,6 +54,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _appFolders = appFolders;
         _smsSender = smsSender;
         _cacheManager = cacheManager;
+        _categoryRepository = categoryRepository;
+        _subCategoryRepository = subCategoryRepository;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -86,12 +95,28 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         await _passwordlessLoginManager.VerifyPasswordlessLoginCode(
             AbpSession.TenantId,
             input.PhoneNumber,
-        input.OtpCode);
+            input.OtpCode);
+
+        var category = await _categoryRepository
+            .GetAll()
+            .FirstOrDefaultAsync(c => c.PublicId == input.CategoryId);
+        if (category == null)
+        {
+            throw new EntityNotFoundException("Category not found");
+        }
+
+        var subCategory = await _subCategoryRepository
+            .GetAll()
+            .FirstOrDefaultAsync(s => s.PublicId == input.SubCategoryId);
+        if (subCategory == null)
+        {
+            throw new EntityNotFoundException("SubCategory not found");
+        }
 
         var report = new Report
         {
-            CategoryId = input.CategoryId,
-            SubCategoryId = input.SubCategoryId,
+            CategoryId = category.Id,
+            SubCategoryId = subCategory.Id,
             Description = input.Description,
             Address = input.Address,
             Longitude = input.Longitude,

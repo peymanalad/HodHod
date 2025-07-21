@@ -54,6 +54,7 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.Id);
         var subs = await _subCategoryRepository.GetAll()
+            .Include(sc => sc.Category)
             .Where(sc => sc.CategoryId == category.Id)
             .ToListAsync();
         return new ListResultDto<SubCategoryDto>(
@@ -82,8 +83,9 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
             throw new EntityNotFoundException("Category not found");
         }
 
-        ObjectMapper.Map(input, category);
+        category.Name = input.Name;
         await _categoryRepository.UpdateAsync(category);
+        await CurrentUnitOfWork.SaveChangesAsync();
 
         return ObjectMapper.Map<CategoryDto>(category);
     }
@@ -98,10 +100,11 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
 
         if (category == null)
         {
-            throw new EntityNotFoundException("SubCategory no found");
+            throw new EntityNotFoundException("Category not found");
         }
 
         await _categoryRepository.DeleteAsync(category);
+        await CurrentUnitOfWork.SaveChangesAsync();
     }
 
 }

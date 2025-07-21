@@ -36,6 +36,7 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     {
         var sub = await _subCategoryRepository
             .GetAll()
+            .Include(s => s.Category)
             .FirstOrDefaultAsync(s => s.PublicId == input.Id);
 
         if (sub == null)
@@ -98,8 +99,10 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
 
         sub.Name = input.Name;
         sub.CategoryId = category.Id;
+        sub.Category = category;
 
         await _subCategoryRepository.UpdateAsync(sub);
+        await CurrentUnitOfWork.SaveChangesAsync();
 
         return ObjectMapper.Map<SubCategoryDto>(sub);
     }
@@ -117,5 +120,6 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
         }
 
         await _subCategoryRepository.DeleteAsync(sub);
+        await CurrentUnitOfWork.SaveChangesAsync();
     }
 }

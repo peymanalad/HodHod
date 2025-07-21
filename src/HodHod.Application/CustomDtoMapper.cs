@@ -184,16 +184,19 @@ internal static class CustomDtoMapper
 
         configuration.CreateMap<Category, CategoryDto>();
         configuration.CreateMap<SubCategory, SubCategoryDto>()
-            .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.CategoryId));
-        configuration.CreateMap<CreateCategoryDto, Category>();
+            .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Category.PublicId)); configuration.CreateMap<CreateCategoryDto, Category>();
         configuration.CreateMap<UpdateCategoryDto, Category>();
         configuration.CreateMap<Report, ReportDto>()
             .ForMember(d => d.FilePaths, opt
                 => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
-            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => r.PhoneNumber.ToString()));
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => r.PhoneNumber.ToString()))
+            .ForMember(d => d.CategoryId, opt => opt.MapFrom(r => r.Category.PublicId))
+            .ForMember(d => d.SubCategoryId, opt => opt.MapFrom(r => r.SubCategory.PublicId));
 
         configuration.CreateMap<CreateReportDto, Report>()
-            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))))
+            .ForMember(d => d.CategoryId, opt => opt.Ignore())
+            .ForMember(d => d.SubCategoryId, opt => opt.Ignore());
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }

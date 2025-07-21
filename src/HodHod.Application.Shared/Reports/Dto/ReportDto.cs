@@ -7,8 +7,8 @@ namespace HodHod.Reports.Dto;
 
 public class ReportDto : EntityDto<Guid>
 {
-    public int CategoryId { get; set; }
-    public int SubCategoryId { get; set; }
+    public Guid CategoryId { get; set; }
+    public Guid SubCategoryId { get; set; }
     public string Description { get; set; }
     public string Address { get; set; }
     public double? Longitude { get; set; }

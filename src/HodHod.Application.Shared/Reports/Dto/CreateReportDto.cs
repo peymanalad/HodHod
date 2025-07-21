@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace HodHod.Reports.Dto;
@@ -6,10 +7,10 @@ namespace HodHod.Reports.Dto;
 public class CreateReportDto
 {
     [Required]
-    public int CategoryId { get; set; }
+    public Guid CategoryId { get; set; }
 
     [Required]
-    public int SubCategoryId { get; set; }
+    public Guid SubCategoryId { get; set; }
 
     [Required]
     [StringLength(4000)]
