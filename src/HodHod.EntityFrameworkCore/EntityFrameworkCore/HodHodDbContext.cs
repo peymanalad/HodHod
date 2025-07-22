@@ -62,6 +62,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
 
     public virtual DbSet<ReportFile> ReportFiles { get; set; }
 
+    public virtual DbSet<PhoneReportLimit> PhoneReportLimits { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
     {

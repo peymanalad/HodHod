@@ -104,6 +104,8 @@ public class AppAuthorizationProvider : AuthorizationProvider
         subCategories.CreateChildPermission(AppPermissions.Pages_Administration_SubCategories_Edit, L("EditingSubCategory"));
         subCategories.CreateChildPermission(AppPermissions.Pages_Administration_SubCategories_Delete, L("DeletingSubCategory"));
 
+        administration.CreateChildPermission(AppPermissions.Pages_Administration_PhoneReportLimits, L("PhoneReportLimits"));
+
         administration.CreateChildPermission(AppPermissions.Pages_Administration_EntityChanges_FullHistory, L("EntityChanges_FullHistory"));
 
         //TENANT-SPECIFIC PERMISSIONS

@@ -16,4 +16,9 @@ public static class PersianDateTimeHelper
             dateTime.Minute,
             dateTime.Second);
     }
+    public static long ToCompactPersianNumber(DateTime dateTime)
+    {
+        var formatted = ToCompactPersianString(dateTime);
+        return long.Parse(formatted);
+    }
 }

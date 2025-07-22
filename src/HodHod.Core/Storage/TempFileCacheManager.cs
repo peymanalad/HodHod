@@ -16,7 +16,7 @@ public class TempFileCacheManager : ITempFileCacheManager
 
     public void SetFile(string token, byte[] content)
     {
-        _cache.Set(token, new TempFileInfo(content), TimeSpan.FromMinutes(2)); // expire time is 1 min by default
+        _cache.Set(token, new TempFileInfo(content), TimeSpan.FromMinutes(5)); // expire time is 1 min by default
     }
 
     public byte[] GetFile(string token)
@@ -27,7 +27,7 @@ public class TempFileCacheManager : ITempFileCacheManager
 
     public void SetFile(string token, TempFileInfo info)
     {
-        _cache.Set(token, info, TimeSpan.FromMinutes(2)); // expire time is 1 min by default
+        _cache.Set(token, info, TimeSpan.FromMinutes(5)); // expire time is 1 min by default
     }
 
     public TempFileInfo GetFileInfo(string token)

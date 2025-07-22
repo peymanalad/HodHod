@@ -16,6 +16,25 @@ public static class AppRoleConfig
                 grantAllPermissionsByDefault: true)
             );
 
+        roleManagementConfig.StaticRoles.Add(
+            new StaticRoleDefinition(
+                StaticRoleNames.Host.SuperAdmin,
+                MultiTenancySides.Host,
+                grantAllPermissionsByDefault: true)
+        );
+
+        roleManagementConfig.StaticRoles.Add(
+            new StaticRoleDefinition(
+                StaticRoleNames.Host.ProvinceAdmin,
+                MultiTenancySides.Host)
+        );
+
+        roleManagementConfig.StaticRoles.Add(
+            new StaticRoleDefinition(
+                StaticRoleNames.Host.CityAdmin,
+                MultiTenancySides.Host)
+        );
+
         //Static tenant roles
 
         roleManagementConfig.StaticRoles.Add(

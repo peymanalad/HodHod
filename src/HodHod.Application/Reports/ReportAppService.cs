@@ -27,6 +27,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IRepository<ReportFile, Guid> _reportFileRepository;
     private readonly IRepository<Category, int> _categoryRepository;
     private readonly IRepository<SubCategory, int> _subCategoryRepository;
+    private readonly IRepository<PhoneReportLimit, int> _phoneReportLimitRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
@@ -44,7 +45,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         ISmsSender smsSender,
         ICacheManager cacheManager,
         IRepository<Category, int> categoryRepository,
-        IRepository<SubCategory, int> subCategoryRepository)
+        IRepository<SubCategory, int> subCategoryRepository,
+        IRepository<PhoneReportLimit, int> phoneReportLimitRepository)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -56,6 +58,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _cacheManager = cacheManager;
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
+        _phoneReportLimitRepository = phoneReportLimitRepository;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -97,6 +100,22 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             input.PhoneNumber,
             input.OtpCode);
 
+        var limit = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == normalized);
+        var maxFileCount = limit?.MaxFileCount ?? PhoneReportLimitDefaults.MaxFileCount;
+        var maxFileSize = limit?.MaxFileSizeInBytes ?? PhoneReportLimitDefaults.MaxFileSizeInBytes;
+        var maxReportsPerHour = limit?.MaxReportsPerHour ?? PhoneReportLimitDefaults.MaxReportsPerHour;
+
+        var recentCount = await _reportRepository.CountAsync(r => r.PhoneNumber == long.Parse(normalized) && r.CreationTime > Clock.Now.AddHours(-1));
+        if (recentCount >= maxReportsPerHour)
+        {
+            throw new UserFriendlyException("Report limit reached");
+        }
+
+        if (input.FileTokens != null && input.FileTokens.Count > maxFileCount)
+        {
+            throw new UserFriendlyException("Too many files");
+        }
+
         var category = await _categoryRepository
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.CategoryId);
@@ -124,7 +143,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             PhoneNumber = long.Parse(normalized),
             Province = input.Province,
             City = input.City,
-            PersianCreationTime = PersianDateTimeHelper.ToCompactPersianString(Clock.Now),
+            PersianCreationTime = PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now),
             Status = ReportStatus.New,
             //Priority = input.Priority,
             IsReferred = false,
@@ -156,6 +175,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 //var binary = new BinaryObject(AbpSession.TenantId, info.File,
                 //    $"Report {report.Id} file {info.FileName}");
                 //await _binaryObjectManager.SaveAsync(binary);
+
+                if (info.File.Length > maxFileSize)
+                {
+                    throw new UserFriendlyException("File too large");
+                }
 
                 var ext = Path.GetExtension(info.FileName);
                 var uniqueName = Guid.NewGuid().ToString("N") + ext;

@@ -42,14 +42,11 @@ public class Report : FullAuditedEntity<Guid>
     [StringLength(50)]
     public string City { get; set; }
 
-    [StringLength(14)]
-    public string PersianCreationTime { get; set; }
+    public long? PersianCreationTime { get; set; }
 
-    [StringLength(14)]
-    public string PersianLastModificationTime { get; set; }
+    public long? PersianLastModificationTime { get; set; }
 
-    [StringLength(14)]
-    public string PersianDeletionTime { get; set; }
+    public long? PersianDeletionTime { get; set; }
 
     public ReportStatus Status { get; set; }
     public ReportPriority Priority { get; set; }

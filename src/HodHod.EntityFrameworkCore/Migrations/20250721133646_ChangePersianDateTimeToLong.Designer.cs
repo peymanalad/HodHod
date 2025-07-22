@@ -4,6 +4,7 @@ using HodHod.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HodHod.Migrations
 {
     [DbContext(typeof(HodHodDbContext))]
-    partial class HodHodDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250721133646_ChangePersianDateTimeToLong")]
+    partial class ChangePersianDateTimeToLong
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2541,55 +2544,6 @@ namespace HodHod.Migrations
 
                     b.ToTable("AppReportFiles");
                 });
-
-
-            modelBuilder.Entity("HodHod.Reports.PhoneReportLimit", b =>
-            {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
-
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                b.Property<DateTime>("CreationTime")
-                    .HasColumnType("datetime2");
-
-                b.Property<long?>("CreatorUserId")
-                    .HasColumnType("bigint");
-
-                b.Property<long?>("DeleterUserId")
-                    .HasColumnType("bigint");
-
-                b.Property<DateTime?>("DeletionTime")
-                    .HasColumnType("datetime2");
-
-                b.Property<bool>("IsDeleted")
-                    .HasColumnType("bit");
-
-                b.Property<DateTime?>("LastModificationTime")
-                    .HasColumnType("datetime2");
-
-                b.Property<long?>("LastModifierUserId")
-                    .HasColumnType("bigint");
-
-                b.Property<int>("MaxFileCount")
-                    .HasColumnType("int");
-
-                b.Property<long>("MaxFileSizeInBytes")
-                    .HasColumnType("bigint");
-
-                b.Property<int>("MaxReportsPerHour")
-                    .HasColumnType("int");
-
-                b.Property<string>("PhoneNumber")
-                    .IsRequired()
-                    .HasMaxLength(32)
-                    .HasColumnType("nvarchar(32)");
-
-                b.HasKey("Id");
-
-                b.ToTable("AppPhoneReportLimits");
-            });
 
             modelBuilder.Entity("HodHod.Storage.BinaryObject", b =>
                 {

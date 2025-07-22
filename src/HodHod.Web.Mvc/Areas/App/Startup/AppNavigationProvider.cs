@@ -134,6 +134,24 @@ public class AppNavigationProvider : NavigationProvider
                     )
                 )
                 .AddItem(new MenuItemDefinition(
+                        AppPageNames.Common.Categories,
+                        L("Categories"),
+                        url: "App/Categories",
+                        icon: "flaticon2-list-3",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions
+                            .Pages_Administration_Categories)
+                    )
+                )
+                .AddItem(new MenuItemDefinition(
+                        AppPageNames.Common.SubCategories,
+                        L("SubCategories"),
+                        url: "App/SubCategories",
+                        icon: "flaticon2-list",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions
+                            .Pages_Administration_SubCategories)
+                    )
+                )
+                .AddItem(new MenuItemDefinition(
                         AppPageNames.Common.Notifications,
                         L("Notifications"),
                         icon: "flaticon-alarm"

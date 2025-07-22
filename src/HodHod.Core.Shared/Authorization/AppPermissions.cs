@@ -86,6 +86,8 @@ public static class AppPermissions
     public const string Pages_Administration_SubCategories_Edit = "Pages.Administration.SubCategories.Edit";
     public const string Pages_Administration_SubCategories_Delete = "Pages.Administration.SubCategories.Delete";
 
+    public const string Pages_Administration_PhoneReportLimits = "Pages.Administration.PhoneReportLimits";
+
     public const string Pages_Administration_NewVersion_Create = "Pages.Administration.NewVersion.Create";
 
     public const string Pages_Administration_EntityChanges_FullHistory = "Pages.Administration.EntityChanges.FullHistory";

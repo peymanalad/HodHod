@@ -15,6 +15,8 @@ public class AppPageNames
         public const string WebhookSubscriptions = "Administration.WebhookSubscriptions";
         public const string DynamicProperties = "Administration.DynamicProperties";
         public const string DynamicEntityProperties = "Administration.DynamicEntityProperties";
+        public const string Categories = "Administration.Categories";
+        public const string SubCategories = "Administration.SubCategories";
         public const string Notifications = "Administration.Notifications";
         public const string Notifications_Inbox = "Administration.Notifications.Inbox";
         public const string Notifications_MassNotifications = "Administration.Notifications.MassNotifications";

@@ -16,9 +16,9 @@ public class ReportDto : EntityDto<Guid>
     public string PhoneNumber { get; set; }
     public string Province { get; set; }
     public string City { get; set; }
-    public string PersianCreationTime { get; set; }
-    public string PersianLastModificationTime { get; set; }
-    public string PersianDeletionTime { get; set; }
+    public long? PersianCreationTime { get; set; }
+    public long? PersianLastModificationTime { get; set; }
+    public long? PersianDeletionTime { get; set; }
     public ReportStatus Status { get; set; }
     public ReportPriority Priority { get; set; }
     public bool IsReferred { get; set; }
