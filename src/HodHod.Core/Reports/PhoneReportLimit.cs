@@ -8,8 +8,8 @@ namespace HodHod.Reports;
 public class PhoneReportLimit : FullAuditedEntity<int>
 {
     [Required]
-    [StringLength(32)]
-    public string PhoneNumber { get; set; }
+    [Range(989000000000, 999999999999)]
+    public long PhoneNumber { get; set; }
 
     public int MaxFileCount { get; set; }
     public long MaxFileSizeInBytes { get; set; }

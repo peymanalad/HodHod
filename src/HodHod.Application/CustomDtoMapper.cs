@@ -193,9 +193,16 @@ internal static class CustomDtoMapper
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(r => r.Category.PublicId))
             .ForMember(d => d.SubCategoryId, opt => opt.MapFrom(r => r.SubCategory.PublicId));
 
-        configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>();
-        configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>();
-        configuration.CreateMap<UpdatePhoneReportLimitDto, PhoneReportLimit>();
+        //configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>();
+        //configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>();
+        //configuration.CreateMap<UpdatePhoneReportLimitDto, PhoneReportLimit>();
+
+        configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(s => s.PhoneNumber.ToString()));
+        configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
+        configuration.CreateMap<UpdatePhoneReportLimitDto, PhoneReportLimit>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
 
         configuration.CreateMap<CreateReportDto, Report>()
             .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))))

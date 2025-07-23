@@ -2463,10 +2463,8 @@ namespace HodHod.Migrations
                     b.Property<int>("MaxReportsPerHour")
                         .HasColumnType("int");
 
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
+                    b.Property<long>("PhoneNumber")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 

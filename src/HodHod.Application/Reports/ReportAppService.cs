@@ -69,11 +69,15 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             return;
         }
 
+        var normalized = PhoneNumberHelper.Normalize(input.PhoneNumber);
+        var phoneDigits = long.Parse(normalized);
+        var limitEntity = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == phoneDigits);
+        var maxPerHour = limitEntity?.MaxReportsPerHour ?? PhoneReportLimitDefaults.MaxReportsPerHour;
 
         var limiterCache = _cacheManager.GetCache<string, OtpSendLimitCacheItem>(OtpSendLimitCacheItem.CacheName);
         var limiter = await limiterCache.GetOrDefaultAsync(input.PhoneNumber);
         var now = Clock.Now;
-        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= PhoneReportLimitDefaults.MaxReportsPerHour)
+        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= maxPerHour)
         {
             throw new UserFriendlyException(L("تعداد دفعات ارسال کد زیاد شده است. لطفا\u064b کمی صبر کرده و دوباره تلاش کنید."));
         }
@@ -107,13 +111,12 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             input.PhoneNumber,
             input.OtpCode);
 
-        var limit = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == normalized);
-        var maxFileCount = limit?.MaxFileCount ?? PhoneReportLimitDefaults.MaxFileCount;
+        var phoneDigits = long.Parse(normalized);
+        var limit = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == phoneDigits); var maxFileCount = limit?.MaxFileCount ?? PhoneReportLimitDefaults.MaxFileCount;
         var maxFileSize = limit?.MaxFileSizeInBytes ?? PhoneReportLimitDefaults.MaxFileSizeInBytes;
         var maxReportsPerHour = limit?.MaxReportsPerHour ?? PhoneReportLimitDefaults.MaxReportsPerHour;
 
-        var recentCount = await _reportRepository.CountAsync(r => r.PhoneNumber == long.Parse(normalized) && r.CreationTime > Clock.Now.AddHours(-1));
-        if (recentCount >= maxReportsPerHour)
+        var recentCount = await _reportRepository.CountAsync(r => r.PhoneNumber == phoneDigits && r.CreationTime > Clock.Now.AddHours(-1)); if (recentCount >= maxReportsPerHour)
         {
             throw new UserFriendlyException("Report limit reached");
         }
@@ -215,7 +218,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         var user = await GetCurrentUserAsync();
         var roles = await UserManager.GetRolesAsync(user);
 
-        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin) &&
+        if (!roles.Contains(StaticRoleNames.Host.Admin) &&
+            !roles.Contains(StaticRoleNames.Host.SuperAdmin) &&
             !roles.Contains(StaticRoleNames.Host.ProvinceAdmin) &&
             !roles.Contains(StaticRoleNames.Host.CityAdmin))
         {

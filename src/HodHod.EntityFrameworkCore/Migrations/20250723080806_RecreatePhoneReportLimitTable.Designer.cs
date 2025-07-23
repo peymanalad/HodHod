@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HodHod.Migrations
 {
     [DbContext(typeof(HodHodDbContext))]
-    [Migration("20250723071045_RebuildWithoutCityDuplication")]
-    partial class RebuildWithoutCityDuplication
+    [Migration("20250723080806_RecreatePhoneReportLimitTable")]
+    partial class RecreatePhoneReportLimitTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2466,10 +2466,8 @@ namespace HodHod.Migrations
                     b.Property<int>("MaxReportsPerHour")
                         .HasColumnType("int");
 
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
+                    b.Property<long>("PhoneNumber")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
