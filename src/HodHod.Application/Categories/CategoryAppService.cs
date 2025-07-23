@@ -10,6 +10,7 @@ using HodHod.Authorization;
 using HodHod.Categories.Dto;
 using System;
 using Abp.Domain.Entities;
+using HodHod.Authorization.Roles;
 
 namespace HodHod.Categories;
 
@@ -64,6 +65,11 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAuthorize(AppPermissions.Pages_Administration_Categories_Create)]
     public async Task<CategoryDto> Create(CreateCategoryDto input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create categories.");
+        }
         var category = ObjectMapper.Map<Category>(input);
         category.PublicId = Guid.NewGuid();
         await _categoryRepository.InsertAsync(category);
@@ -74,6 +80,11 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAuthorize(AppPermissions.Pages_Administration_Categories_Edit)]
     public async Task<CategoryDto> Update(UpdateCategoryDto input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create categories.");
+        }
         var category = await _categoryRepository
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.PublicId);
@@ -94,6 +105,11 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAuthorize(AppPermissions.Pages_Administration_Categories_Delete)]
     public async Task Delete(EntityDto<Guid> input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create categories.");
+        }
         var category = await _categoryRepository
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.Id);

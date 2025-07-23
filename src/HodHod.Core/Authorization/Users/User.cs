@@ -28,6 +28,17 @@ public class User : AbpUser<User>
 
     public List<UserOrganizationUnit> OrganizationUnits { get; set; }
 
+    /// <summary>
+    /// Province assigned to this admin user. Used for province level access control.
+    /// </summary>
+    public string Province { get; set; }
+
+    /// <summary>
+    /// City assigned to this admin user. Used for city level access control.
+    /// </summary>
+    public string City { get; set; }
+
+
     //Can add application specific user properties here
 
     public User()

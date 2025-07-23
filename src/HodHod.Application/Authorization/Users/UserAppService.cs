@@ -346,6 +346,12 @@ public class UserAppService : HodHodAppServiceBase, IUserAppService
     [AbpAuthorize(AppPermissions.Pages_Administration_Users_Create)]
     protected virtual async Task CreateUserAsync(CreateOrUpdateUserInput input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create users.");
+        }
+
         if (AbpSession.TenantId.HasValue)
         {
             await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());

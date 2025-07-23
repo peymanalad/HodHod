@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using HodHod.Authorization;
 using HodHod.Categories.Dto;
 using Abp.Domain.Entities;
+using HodHod.Authorization.Roles;
 
 namespace HodHod.Categories;
 
@@ -50,6 +51,11 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     [AbpAuthorize(AppPermissions.Pages_Administration_SubCategories_Create)]
     public async Task<SubCategoryDto> Create(CreateSubCategoryDto input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create subcategories.");
+        }
         var category = await _categoryRepository
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.CategoryId);
@@ -79,6 +85,11 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     [AbpAuthorize(AppPermissions.Pages_Administration_SubCategories_Edit)]
     public async Task<SubCategoryDto> Update(UpdateSubCategoryDto input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create subcategories.");
+        }
         var sub = await _subCategoryRepository
             .GetAll()
             .FirstOrDefaultAsync(s => s.PublicId == input.PublicId);
@@ -110,6 +121,11 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     [AbpAuthorize(AppPermissions.Pages_Administration_SubCategories_Delete)]
     public async Task Delete(EntityDto<Guid> input)
     {
+        var currentUser = await GetCurrentUserAsync();
+        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admins can create subcategories.");
+        }
         var sub = await _subCategoryRepository
             .GetAll()
             .FirstOrDefaultAsync(s => s.PublicId == input.Id);

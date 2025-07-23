@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Abp.Authorization;
 using Abp.Domain.Entities;
@@ -10,6 +11,7 @@ using Abp.Runtime.Caching;
 using Abp.Timing;
 using Abp.UI;
 using HodHod.Authorization.PasswordlessLogin;
+using HodHod.Authorization.Roles;
 using HodHod.Categories;
 using HodHod.Net.Sms;
 using HodHod.Reports.Dto;
@@ -71,7 +73,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         var limiterCache = _cacheManager.GetCache<string, OtpSendLimitCacheItem>(OtpSendLimitCacheItem.CacheName);
         var limiter = await limiterCache.GetOrDefaultAsync(input.PhoneNumber);
         var now = Clock.Now;
-        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= 200)
+        if (limiter != null && limiter.WindowStart.AddHours(1) > now && limiter.Count >= PhoneReportLimitDefaults.MaxReportsPerHour)
         {
             throw new UserFriendlyException(L("تعداد دفعات ارسال کد زیاد شده است. لطفا\u064b کمی صبر کرده و دوباره تلاش کنید."));
         }
@@ -90,6 +92,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var message = string.Format(L("PasswordlessLogin_SmsMessage", HodHodConsts.ProductName, code));
         await _smsSender.SendAsync(input.PhoneNumber, message);
+
+        // Do not actually send the SMS in this stage. The OTP is generated and
+        // stored in cache for later verification but no SMS is dispatched.
+        // var message = string.Format(L("PasswordlessLogin_SmsMessage", HodHodConsts.ProductName, code));
+        // await _smsSender.SendAsync(input.PhoneNumber, message);
     }
 
     public async System.Threading.Tasks.Task SubmitReport(CreateReportDto input)
@@ -198,5 +205,42 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 });
             }
         }
+    }
+    /// <summary>
+    /// Retrieves reports filtered based on the current admin's role.
+    /// </summary>
+    [AbpAuthorize]
+    public async Task<List<ReportDto>> GetReportsForAdminAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin) &&
+            !roles.Contains(StaticRoleNames.Host.ProvinceAdmin) &&
+            !roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var query = _reportRepository.GetAll();
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+        }
+        // SuperAdmin can see all reports without filtering
+
+        var reports = await query.Include(r => r.Files).ToListAsync();
+        return ObjectMapper.Map<List<ReportDto>>(reports);
     }
 }

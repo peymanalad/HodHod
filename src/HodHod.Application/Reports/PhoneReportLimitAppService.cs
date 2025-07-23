@@ -7,6 +7,7 @@ using Abp.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using HodHod.Authorization;
 using HodHod.Reports.Dto;
+using System;
 
 namespace HodHod.Reports;
 
@@ -22,9 +23,19 @@ public class PhoneReportLimitAppService : HodHodAppServiceBase, IPhoneReportLimi
 
     public async Task<ListResultDto<PhoneReportLimitDto>> GetAll()
     {
-        var limits = await _limitRepository.GetAllListAsync();
-        return new ListResultDto<PhoneReportLimitDto>(ObjectMapper.Map<List<PhoneReportLimitDto>>(limits));
+        try
+        {
+            var limits = await _limitRepository.GetAllListAsync();
+            var dtoList = ObjectMapper.Map<List<PhoneReportLimitDto>>(limits);
+            return new ListResultDto<PhoneReportLimitDto>(dtoList);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error in GetAll of PhoneReportLimit", ex); // اگر Logger داری
+            throw; // یا یک Exception قابل فهم‌تر برگردون
+        }
     }
+
 
     public async Task<PhoneReportLimitDto> Get(EntityDto<int> input)
     {
