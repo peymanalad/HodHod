@@ -1,4 +1,4 @@
-﻿namespace HodHod.Web.Models.TokenAuth;
+﻿namespace HodHod.TokenAuth.Dto;
 
 public class ExternalAuthenticateResultModel
 {
@@ -16,4 +16,3 @@ public class ExternalAuthenticateResultModel
 
     public int RefreshTokenExpireInSeconds { get; set; }
 }
-

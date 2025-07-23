@@ -2,7 +2,7 @@
 using Abp.AspNetZeroCore.Web.Authentication.External;
 using Abp.AutoMapper;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 [AutoMapFrom(typeof(ExternalLoginProviderInfo))]
 public class ExternalLoginProviderInfoModel
@@ -14,4 +14,3 @@ public class ExternalLoginProviderInfoModel
     public Dictionary<string, string> AdditionalParams { get; set; }
 
 }
-

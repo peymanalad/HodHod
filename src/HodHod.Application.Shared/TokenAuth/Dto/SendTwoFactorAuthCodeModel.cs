@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class SendTwoFactorAuthCodeModel
 {
@@ -10,4 +10,3 @@ public class SendTwoFactorAuthCodeModel
     [Required]
     public string Provider { get; set; }
 }
-

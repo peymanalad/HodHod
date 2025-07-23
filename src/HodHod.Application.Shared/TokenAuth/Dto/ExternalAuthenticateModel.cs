@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Abp.Authorization.Users;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class ExternalAuthenticateModel
 {
@@ -20,4 +20,3 @@ public class ExternalAuthenticateModel
 
     public bool? SingleSignIn { get; set; }
 }
-

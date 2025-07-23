@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Abp.Auditing;
+﻿using Abp.Auditing;
 using Abp.Authorization.Users;
+using System.ComponentModel.DataAnnotations;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class AuthenticateModel
 {
@@ -28,4 +28,3 @@ public class AuthenticateModel
     [DisableAuditing]
     public string CaptchaResponse { get; set; }
 }
-

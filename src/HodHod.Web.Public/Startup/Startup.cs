@@ -96,8 +96,11 @@ public class Startup
 
             endpoints.MapControllerRoute("defaultWithArea", "{area}/{controller=Home}/{action=Index}/{id?}");
             endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+            endpoints.MapControllerRoute("api", "api/{controller}/{action}");
 
             app.ApplicationServices.GetRequiredService<IAbpAspNetCoreConfiguration>().EndpointConfiguration.ConfigureAllEndpoints(endpoints);
+            endpoints.MapControllers();
+
         });
 
         if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))

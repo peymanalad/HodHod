@@ -1,6 +1,6 @@
-﻿namespace HodHod.Web.Models.TokenAuth;
+﻿namespace HodHod.TokenAuth.Dto;
 
-public class SwitchedAccountAuthenticateResultModel
+public class ImpersonatedAuthenticateResultModel
 {
     public string AccessToken { get; set; }
 
@@ -8,4 +8,3 @@ public class SwitchedAccountAuthenticateResultModel
 
     public int ExpireInSeconds { get; set; }
 }
-

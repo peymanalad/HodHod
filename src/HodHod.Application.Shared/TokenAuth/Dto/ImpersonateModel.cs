@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class ImpersonateModel
 {
@@ -9,4 +9,3 @@ public class ImpersonateModel
     [Range(1, long.MaxValue)]
     public long UserId { get; set; }
 }
-

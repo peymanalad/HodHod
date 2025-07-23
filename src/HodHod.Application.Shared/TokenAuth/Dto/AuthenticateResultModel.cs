@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class AuthenticateResultModel
 {
@@ -21,12 +21,10 @@ public class AuthenticateResultModel
     public IList<string> TwoFactorAuthProviders { get; set; }
 
     public string TwoFactorRememberClientToken { get; set; }
+    public int RefreshTokenExpireInSeconds { get; set; }
 
     public string ReturnUrl { get; set; }
 
     public string RefreshToken { get; set; }
-
-    public int RefreshTokenExpireInSeconds { get; set; }
     public string c { get; set; }
 }
-

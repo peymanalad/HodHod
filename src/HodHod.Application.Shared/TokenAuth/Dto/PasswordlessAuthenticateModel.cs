@@ -1,6 +1,5 @@
 ﻿using Abp.Auditing;
-
-namespace HodHod.Web.Models.TokenAuth;
+namespace HodHod.TokenAuth.Dto;
 
 public class PasswordlessAuthenticateModel
 {
@@ -17,4 +16,3 @@ public class PasswordlessAuthenticateModel
     [DisableAuditing]
     public string CaptchaResponse { get; set; }
 }
-

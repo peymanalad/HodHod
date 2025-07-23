@@ -1,4 +1,4 @@
-﻿namespace HodHod.Web.Models.TokenAuth;
+﻿namespace HodHod.TokenAuth.Dto;
 
 public class PasswordlessAuthenticateResultModel
 {
@@ -16,4 +16,3 @@ public class PasswordlessAuthenticateResultModel
 
     public int RefreshTokenExpireInSeconds { get; set; }
 }
-

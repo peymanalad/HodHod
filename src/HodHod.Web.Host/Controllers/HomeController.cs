@@ -24,6 +24,7 @@ public class HomeController : HodHodControllerBase
     [DisableAuditing]
     public IActionResult Index()
     {
+        
         if (_webHostEnvironment.IsDevelopment())
         {
             return RedirectToAction("Index", "Ui");
