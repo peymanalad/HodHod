@@ -9,43 +9,36 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using HodHod.Configuration;
 using HodHod.Web.Authentication.JwtBearer;
 
 namespace HodHod.Web.Startup;
 
 public static class AuthConfigurer
 {
-    public static void Configure(IServiceCollection services, IConfiguration configuration)
+    public static void Configure(IServiceCollection services)
     {
         var authenticationBuilder = services.AddAuthentication();
 
-        if (bool.Parse(configuration["Authentication:JwtBearer:IsEnabled"]))
+        var isJwtEnabled = Environment.GetEnvironmentVariable("Authentication__JwtBearer__IsEnabled");
+        if (bool.TryParse(isJwtEnabled, out var jwtEnabled) && jwtEnabled)
         {
             authenticationBuilder.AddAbpAsyncJwtBearer(options =>
             {
+                var securityKey = Environment.GetEnvironmentVariable("Authentication__JwtBearer__SecurityKey");
+                var issuer = Environment.GetEnvironmentVariable("Authentication__JwtBearer__Issuer");
+                var audience = Environment.GetEnvironmentVariable("Authentication__JwtBearer__Audience");
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    // The signing key must match!
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Authentication:JwtBearer:SecurityKey"])),
-
-                    // Validate the JWT Issuer (iss) claim
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey)),
                     ValidateIssuer = true,
-                    ValidIssuer = configuration["Authentication:JwtBearer:Issuer"],
-
-                    // Validate the JWT Audience (aud) claim
+                    ValidIssuer = issuer,
                     ValidateAudience = true,
-                    ValidAudience = configuration["Authentication:JwtBearer:Audience"],
-
-                    // Validate the token expiry
+                    ValidAudience = audience,
                     ValidateLifetime = true,
-
-                    // If you want to allow a certain amount of clock drift, set that here
                     ClockSkew = TimeSpan.Zero
                 };
 
@@ -60,36 +53,27 @@ public static class AuthConfigurer
         }
     }
 
-    /* This method is needed to authorize SignalR javascript client.
-     * SignalR can not send authorization header. So, we are getting it from query string as an encrypted text. */
     private static Task QueryStringTokenResolver(MessageReceivedContext context)
     {
         if (!context.HttpContext.Request.Path.HasValue)
-        {
             return Task.CompletedTask;
-        }
 
         if (context.HttpContext.Request.Path.Value.StartsWith("/signalr"))
         {
-            var env = context.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
-            var config = env.GetAppConfiguration();
-            var allowAnonymousSignalRConnection = bool.Parse(config["App:AllowAnonymousSignalRConnection"]);
-
-            return SetToken(context, allowAnonymousSignalRConnection);
+            var allowAnonymous = Environment.GetEnvironmentVariable("App__AllowAnonymousSignalRConnection");
+            return SetToken(context, bool.TryParse(allowAnonymous, out var result) && result);
         }
 
-        List<string> urlsUsingEnchAuthToken = new List<string>()
-            {
-                "/Chat/GetUploadedObject?",
-                "/Profile/GetProfilePictureByUser?"
-            };
+        List<string> urlsUsingEnchAuthToken = new()
+        {
+            "/Chat/GetUploadedObject?",
+            "/Profile/GetProfilePictureByUser?"
+        };
 
         if (urlsUsingEnchAuthToken.Any(url => context.HttpContext.Request.GetDisplayUrl().Contains(url)))
         {
             if (context.HttpContext.Request.Headers.ContainsKey("authorization"))
-            {
                 return Task.CompletedTask;
-            }
 
             return SetToken(context, false);
         }
@@ -110,9 +94,7 @@ public static class AuthConfigurer
             return Task.CompletedTask;
         }
 
-        //Set auth token from cookie
         context.Token = SimpleStringCipher.Instance.Decrypt(qsAuthToken, AppConsts.DefaultPassPhrase);
         return Task.CompletedTask;
     }
 }
-

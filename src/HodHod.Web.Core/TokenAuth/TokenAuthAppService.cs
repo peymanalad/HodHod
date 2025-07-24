@@ -56,6 +56,8 @@ namespace HodHod.Web.Controllers;
 //[ApiController]
 //[AllowAnonymous]
 //[IgnoreAntiforgeryToken]
+[AbpAllowAnonymous]
+[IgnoreAntiforgeryToken]
 public class TokenAuthAppService : HodHodAppServiceBase, ITokenAuthAppService
 {
     private readonly LogInManager _logInManager;

@@ -16,6 +16,8 @@ using HodHod.Categories;
 using HodHod.Net.Sms;
 using HodHod.Reports.Dto;
 using HodHod.Storage;
+using HodHod.TokenAuth;
+using HodHod.TokenAuth.Dto;
 using Microsoft.EntityFrameworkCore;
 using Twilio.TwiML.Voice;
 using Task = System.Threading.Tasks.Task;
@@ -36,6 +38,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IAppFolders _appFolders;
     private readonly ISmsSender _smsSender;
     private readonly ICacheManager _cacheManager;
+
     public ReportAppService(
         IRepository<Report, Guid> reportRepository,
         IRepository<ReportFile, Guid> reportFileRepository,

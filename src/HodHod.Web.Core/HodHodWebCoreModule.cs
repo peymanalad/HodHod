@@ -62,8 +62,13 @@ public class HodHodWebCoreModule : AbpModule
                 typeof(HodHodApplicationModule).GetAssembly()
             );
 
-        if (Environment.GetEnvironmentVariable("Authentication:JwtBearer:IsEnabled") != null &&
-            bool.Parse(Environment.GetEnvironmentVariable("Authentication:JwtBearer:IsEnabled")))
+        Configuration.Modules.AbpAspNetCore()
+            .CreateControllersForAppServices(
+                typeof(HodHodWebCoreModule).GetAssembly(),
+                moduleName: "app"
+            );
+
+        if (bool.TryParse(Environment.GetEnvironmentVariable("Authentication__JwtBearer__IsEnabled"), out var jwtEnabled) && jwtEnabled)
         {
             ConfigureTokenAuth();
         }
@@ -78,17 +83,17 @@ public class HodHodWebCoreModule : AbpModule
         }
 
         // Configure Redis cache if a connection string is provided.
-        var redisConnection = Environment.GetEnvironmentVariable("Abp:RedisCache:ConnectionString") ??
-                              Environment.GetEnvironmentVariable("Abp__RedisCache__ConnectionString");
+        var redisConnection = Environment.GetEnvironmentVariable("Abp__RedisCache__ConnectionString") ??
+                              Environment.GetEnvironmentVariable("Abp:RedisCache:ConnectionString");
         if (!string.IsNullOrWhiteSpace(redisConnection))
         {
             Configuration.Caching.UseRedis(options =>
             {
                 options.ConnectionString = redisConnection;
 
-                var dbIdValue = Environment.GetEnvironmentVariable("Abp:RedisCache:DatabaseId") ??
-                                Environment.GetEnvironmentVariable("Abp__RedisCache__DatabaseId");
-                if (!string.IsNullOrWhiteSpace(dbIdValue) && int.TryParse(dbIdValue, out var dbId))
+                var dbIdRaw = Environment.GetEnvironmentVariable("Abp__RedisCache__DatabaseId") ??
+                              Environment.GetEnvironmentVariable("Abp:RedisCache:DatabaseId");
+                if (!string.IsNullOrWhiteSpace(dbIdRaw) && int.TryParse(dbIdRaw, out var dbId))
                 {
                     options.DatabaseId = dbId;
                 }
@@ -111,11 +116,11 @@ public class HodHodWebCoreModule : AbpModule
         var tokenAuthConfig = IocManager.Resolve<TokenAuthConfiguration>();
 
         tokenAuthConfig.SecurityKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Authentication:JwtBearer:SecurityKey"))
-        );
+            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Authentication__JwtBearer__SecurityKey")));
 
-        tokenAuthConfig.Issuer = Environment.GetEnvironmentVariable("Authentication:JwtBearer:Issuer");
-        tokenAuthConfig.Audience = Environment.GetEnvironmentVariable("Authentication:JwtBearer:Audience");
+
+        tokenAuthConfig.Issuer = Environment.GetEnvironmentVariable("Authentication__JwtBearer__Issuer");
+        tokenAuthConfig.Audience = Environment.GetEnvironmentVariable("Authentication__JwtBearer__Audience");
         tokenAuthConfig.SigningCredentials =
             new SigningCredentials(tokenAuthConfig.SecurityKey, SecurityAlgorithms.HmacSha256);
         tokenAuthConfig.AccessTokenExpiration = AppConsts.AccessTokenExpiration;
@@ -139,25 +144,28 @@ public class HodHodWebCoreModule : AbpModule
     {
         var appFolders = IocManager.Resolve<AppFolders>();
 
-        var sampleProfileImagesFolder = Environment.GetEnvironmentVariable("AppFolders:SampleProfileImagesFolder") ??
-                                        Environment.GetEnvironmentVariable("AppFolders__SampleProfileImagesFolder");
-        appFolders.SampleProfileImagesFolder = !string.IsNullOrWhiteSpace(sampleProfileImagesFolder)
-            ? sampleProfileImagesFolder
+
+        var sampleProfile = Environment.GetEnvironmentVariable("AppFolders__SampleProfileImagesFolder") ??
+                            Environment.GetEnvironmentVariable("AppFolders:SampleProfileImagesFolder");
+        appFolders.SampleProfileImagesFolder = !string.IsNullOrWhiteSpace(sampleProfile)
+            ? sampleProfile
             : Path.Combine(_env.WebRootPath,
                 $"Common{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}SampleProfilePics");
 
-        var webLogsFolder = Environment.GetEnvironmentVariable("AppFolders:WebLogsFolder") ??
-                            Environment.GetEnvironmentVariable("AppFolders__WebLogsFolder");
-        appFolders.WebLogsFolder = !string.IsNullOrWhiteSpace(webLogsFolder)
-            ? webLogsFolder
+
+        var logs = Environment.GetEnvironmentVariable("AppFolders__WebLogsFolder") ??
+                   Environment.GetEnvironmentVariable("AppFolders:WebLogsFolder");
+        appFolders.WebLogsFolder = !string.IsNullOrWhiteSpace(logs)
+            ? logs
             : Path.Combine(_env.ContentRootPath, $"App_Data{Path.DirectorySeparatorChar}Logs");
 
-        var reportFilesFolder = Environment.GetEnvironmentVariable("AppFolders:ReportFilesFolder") ??
-                                Environment.GetEnvironmentVariable("AppFolders__ReportFilesFolder");
-        appFolders.ReportFilesFolder = !string.IsNullOrWhiteSpace(reportFilesFolder)
-            ? reportFilesFolder
+        var reportsFile = Environment.GetEnvironmentVariable("AppFolders__ReportFilesFolder") ??
+                          Environment.GetEnvironmentVariable("AppFolders:ReportFilesFolder");
+        appFolders.ReportFilesFolder = !string.IsNullOrWhiteSpace(reportsFile)
+            ? reportsFile
             : "/var/dockers/HodHodBackend/BinaryObjects";
 
+        Directory.CreateDirectory(appFolders.SampleProfileImagesFolder);
         Directory.CreateDirectory(appFolders.ReportFilesFolder);
         Directory.CreateDirectory(appFolders.WebLogsFolder);
     }

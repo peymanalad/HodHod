@@ -101,7 +101,7 @@ public class Startup
         }
 
         IdentityRegistrar.Register(services);
-        AuthConfigurer.Configure(services, _appConfiguration);
+        AuthConfigurer.Configure(services);
 
         if (AppSettingProvider.GetBool("OpenIddict__IsEnabled", _appConfiguration))
         {

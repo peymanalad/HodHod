@@ -28,7 +28,20 @@ public class AppSettingProvider : SettingProvider
         _appConfiguration = configurationAccessor.Configuration;
         _visibleSettingClientVisibilityProvider = new VisibleSettingClientVisibilityProvider();
     }
+    public static bool GetBool(string key, IConfiguration config, bool defaultValue = false)
+    {
+        var value = Get(key, config);
+        return bool.TryParse(value, out var result) ? result : defaultValue;
+    }
+    public static string Get(string key, IConfiguration config)
+    {
+        var envValue = Environment.GetEnvironmentVariable(key);
+        if (!string.IsNullOrWhiteSpace(envValue))
+            return envValue;
 
+        var configKey = key.Replace("__", ":");
+        return config[configKey];
+    }
     public override IEnumerable<SettingDefinition> GetSettingDefinitions(SettingDefinitionProviderContext context)
     {
         // Disable TwoFactorLogin by default (can be enabled by UI)
