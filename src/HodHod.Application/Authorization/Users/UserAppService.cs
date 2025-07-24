@@ -347,9 +347,45 @@ public class UserAppService : HodHodAppServiceBase, IUserAppService
     protected virtual async Task CreateUserAsync(CreateOrUpdateUserInput input)
     {
         var currentUser = await GetCurrentUserAsync();
-        if (!await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin))
+        var isSuperAdmin = await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.SuperAdmin);
+        var isProvinceAdmin = await UserManager.IsInRoleAsync(currentUser, StaticRoleNames.Host.ProvinceAdmin);
+
+        var assignedRoles = input.AssignedRoleNames ?? Array.Empty<string>();
+
+        if (assignedRoles.Contains(StaticRoleNames.Host.ProvinceAdmin))
         {
-            throw new AbpAuthorizationException("Only super admins can create users.");
+            if (!isSuperAdmin)
+            {
+                throw new AbpAuthorizationException("Only super admins can create province admins.");
+            }
+
+            if (string.IsNullOrWhiteSpace(input.User.Province))
+            {
+                throw new UserFriendlyException("Province is required for a province admin.");
+            }
+        }
+
+        if (assignedRoles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!(isSuperAdmin || isProvinceAdmin))
+            {
+                throw new AbpAuthorizationException("Only super or province admins can create city admins.");
+            }
+
+            if (string.IsNullOrWhiteSpace(input.User.Province) || string.IsNullOrWhiteSpace(input.User.City))
+            {
+                throw new UserFriendlyException("Province and city are required for a city admin.");
+            }
+
+            if (isProvinceAdmin && !string.Equals(currentUser.Province, input.User.Province, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserFriendlyException("Province admins can only create city admins within their province.");
+            }
+        }
+
+        if (!isSuperAdmin && !(isProvinceAdmin && assignedRoles.Contains(StaticRoleNames.Host.CityAdmin)))
+        {
+            throw new AbpAuthorizationException("You are not allowed to create this user.");
         }
 
         if (AbpSession.TenantId.HasValue)

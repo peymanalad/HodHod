@@ -2,6 +2,7 @@
 using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Domain.Entities;
+using Newtonsoft.Json;
 
 namespace HodHod.Authorization.Users.Dto;
 
@@ -45,6 +46,8 @@ public class UserEditDto : IPassivable
     public virtual bool IsTwoFactorEnabled { get; set; }
 
     public virtual bool IsLockoutEnabled { get; set; }
+    public string Province { get; set; }
+    public string City { get; set; }
 
 }
 

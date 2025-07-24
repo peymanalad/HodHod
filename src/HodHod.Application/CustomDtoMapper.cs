@@ -47,8 +47,10 @@ using HodHod.Sessions.Dto;
 using HodHod.WebHooks.Dto;
 using HodHod.Categories;
 using HodHod.Categories.Dto;
+using HodHod.Geo;
 using HodHod.Reports;
 using HodHod.Reports.Dto;
+using HodHod.Geo.Dto;
 
 namespace HodHod;
 
@@ -187,11 +189,16 @@ internal static class CustomDtoMapper
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Category.PublicId)); configuration.CreateMap<CreateCategoryDto, Category>();
         configuration.CreateMap<UpdateCategoryDto, Category>();
         configuration.CreateMap<Report, ReportDto>()
-            .ForMember(d => d.FilePaths, opt
-                => opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
-            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => r.PhoneNumber.ToString()))
-            .ForMember(d => d.CategoryId, opt => opt.MapFrom(r => r.Category.PublicId))
-            .ForMember(d => d.SubCategoryId, opt => opt.MapFrom(r => r.SubCategory.PublicId));
+            .ForMember(d => d.FilePaths, opt =>
+                opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
+            .ForMember(d => d.PhoneNumber,
+                opt => opt.MapFrom(r => r.PhoneNumber.ToString()))
+            .ForMember(d => d.CategoryId,
+                opt => opt.MapFrom(r => r.Category.PublicId))
+            .ForMember(d => d.SubCategoryId,
+                opt => opt.MapFrom(r => r.SubCategory.PublicId))
+            .ForMember(d => d.UniqueId,
+                opt => opt.MapFrom(r => r.UniqueId));
 
         //configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>();
         //configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>();
@@ -208,6 +215,9 @@ internal static class CustomDtoMapper
             .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))))
             .ForMember(d => d.CategoryId, opt => opt.Ignore())
             .ForMember(d => d.SubCategoryId, opt => opt.Ignore());
+        configuration.CreateMap<LocationResult, LocationResultDto>();
+        configuration.CreateMap<Province, ProvinceDto>();
+        configuration.CreateMap<City, CityDto>();
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }

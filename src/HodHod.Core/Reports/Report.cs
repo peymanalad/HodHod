@@ -10,6 +10,8 @@ namespace HodHod.Reports;
 [Table("AppReports")]
 public class Report : FullAuditedEntity<Guid>
 {
+    [StringLength(12)]
+    public string UniqueId { get; set; }
     [Required]
     public int CategoryId { get; set; }
 

@@ -16,6 +16,7 @@ using HodHod.Chat;
 using HodHod.Editions;
 using HodHod.ExtraProperties;
 using HodHod.Friendships;
+using HodHod.Geo;
 using HodHod.MultiTenancy;
 using HodHod.MultiTenancy.Accounting;
 using HodHod.MultiTenancy.Payments;
@@ -63,6 +64,9 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<ReportFile> ReportFiles { get; set; }
 
     public virtual DbSet<PhoneReportLimit> PhoneReportLimits { get; set; }
+    public virtual DbSet<Province> Provinces { get; set; }
+
+    public virtual DbSet<City> Cities { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
     {
@@ -166,6 +170,15 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
                 .HasForeignKey(rf => rf.ReportId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<City>(b =>
+        {
+            b.HasOne(c => c.Province)
+                .WithMany(p => p.Cities)
+                .HasForeignKey(c => c.ProvinceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         modelBuilder.ConfigureOpenIddict();
     }

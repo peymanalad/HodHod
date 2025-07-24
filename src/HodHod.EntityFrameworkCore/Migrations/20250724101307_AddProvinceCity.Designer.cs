@@ -4,6 +4,7 @@ using HodHod.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HodHod.Migrations
 {
     [DbContext(typeof(HodHodDbContext))]
-    partial class HodHodDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250724101307_AddProvinceCity")]
+    partial class AddProvinceCity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1833,8 +1836,7 @@ namespace HodHod.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -1924,8 +1926,7 @@ namespace HodHod.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Province")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RecoveryCode")
                         .HasColumnType("nvarchar(max)");

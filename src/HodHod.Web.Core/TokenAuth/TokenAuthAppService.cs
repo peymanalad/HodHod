@@ -250,6 +250,8 @@ public class TokenAuthAppService : HodHodAppServiceBase, ITokenAuthAppService
             )
         );
 
+        var roles = await _userManager.GetRolesAsync(loginResult.User);
+
         return new AuthenticateResultModel
         {
             AccessToken = accessToken,
@@ -259,7 +261,8 @@ public class TokenAuthAppService : HodHodAppServiceBase, ITokenAuthAppService
             EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
             TwoFactorRememberClientToken = twoFactorRememberClientToken,
             UserId = loginResult.User.Id,
-            ReturnUrl = returnUrl
+            ReturnUrl = returnUrl,
+            Roles = roles.ToList()
         };
     }
 

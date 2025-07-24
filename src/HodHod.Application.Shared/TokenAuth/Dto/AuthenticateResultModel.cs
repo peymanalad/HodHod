@@ -27,4 +27,5 @@ public class AuthenticateResultModel
 
     public string RefreshToken { get; set; }
     public string c { get; set; }
+    public IList<string> Roles { get; set; }
 }

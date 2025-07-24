@@ -26,6 +26,7 @@ public class AbpAuthenticateResultModel
     public string TwoFactorRememberClientToken { get; set; }
 
     public string ReturnUrl { get; set; }
+    public IList<string> Roles { get; set; }
 
     public DateTime RefreshTokenExpireDate { get; set; }
 }

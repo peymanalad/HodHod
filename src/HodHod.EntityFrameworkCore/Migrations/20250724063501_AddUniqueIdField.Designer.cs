@@ -4,6 +4,7 @@ using HodHod.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HodHod.Migrations
 {
     [DbContext(typeof(HodHodDbContext))]
-    partial class HodHodDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250724063501_AddUniqueIdField")]
+    partial class AddUniqueIdField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1833,8 +1836,7 @@ namespace HodHod.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -1924,8 +1926,7 @@ namespace HodHod.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Province")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RecoveryCode")
                         .HasColumnType("nvarchar(max)");
@@ -2161,89 +2162,6 @@ namespace HodHod.Migrations
                     b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("AppFriendships");
-                });
-
-            modelBuilder.Entity("HodHod.Geo.City", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ProvinceId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProvinceId");
-
-                    b.ToTable("AppCities");
-                });
-
-            modelBuilder.Entity("HodHod.Geo.Province", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AppProvinces");
                 });
 
             modelBuilder.Entity("HodHod.MultiTenancy.Accounting.Invoice", b =>
@@ -2987,17 +2905,6 @@ namespace HodHod.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("HodHod.Geo.City", b =>
-                {
-                    b.HasOne("HodHod.Geo.Province", "Province")
-                        .WithMany("Cities")
-                        .HasForeignKey("ProvinceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Province");
-                });
-
             modelBuilder.Entity("HodHod.MultiTenancy.Payments.SubscriptionPaymentProduct", b =>
                 {
                     b.HasOne("HodHod.MultiTenancy.Payments.SubscriptionPayment", null)
@@ -3140,11 +3047,6 @@ namespace HodHod.Migrations
             modelBuilder.Entity("HodHod.Categories.Category", b =>
                 {
                     b.Navigation("SubCategories");
-                });
-
-            modelBuilder.Entity("HodHod.Geo.Province", b =>
-                {
-                    b.Navigation("Cities");
                 });
 
             modelBuilder.Entity("HodHod.MultiTenancy.Payments.SubscriptionPayment", b =>

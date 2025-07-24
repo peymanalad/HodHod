@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
+using Abp.Application.Services.Dto;
 using HodHod.Reports.Dto;
 
 namespace HodHod.Reports;
@@ -14,5 +15,5 @@ public interface IReportAppService : IApplicationService
     /// Super admins see everything, province admins see their province
     /// and city admins see their city.
     /// </summary>
-    Task<List<ReportDto>> GetReportsForAdminAsync();
+    Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input);
 }

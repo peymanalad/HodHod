@@ -121,6 +121,8 @@ public class HostRoleAndUserCreator
             _context.SaveChanges();
         }
 
+        GrantPermissionIfNotExists(provinceAdminRoleForHost, AppPermissions.Pages_Administration_Users_Create);
+
         var cityAdminRoleForHost = _context.Roles.IgnoreQueryFilters().FirstOrDefault(r => r.TenantId == null && r.Name == StaticRoleNames.Host.CityAdmin);
         if (cityAdminRoleForHost == null)
         {

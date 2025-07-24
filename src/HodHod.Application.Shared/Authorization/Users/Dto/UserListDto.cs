@@ -30,5 +30,7 @@ public class UserListDto : EntityDto<long>, IPassivable, IHasCreationTime
     public bool IsActive { get; set; }
 
     public DateTime CreationTime { get; set; }
+    public string Province { get; set; }
+    public string City { get; set; }
 }
 

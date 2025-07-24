@@ -3,23 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
-using Abp.Domain.Uow;
+using Abp.Linq.Extensions;
 using Abp.Runtime.Caching;
 using Abp.Timing;
 using Abp.UI;
 using HodHod.Authorization.PasswordlessLogin;
 using HodHod.Authorization.Roles;
 using HodHod.Categories;
+using HodHod.Geo;
 using HodHod.Net.Sms;
 using HodHod.Reports.Dto;
 using HodHod.Storage;
-using HodHod.TokenAuth;
-using HodHod.TokenAuth.Dto;
 using Microsoft.EntityFrameworkCore;
-using Twilio.TwiML.Voice;
+using System.Linq.Dynamic.Core;
+
+
 using Task = System.Threading.Tasks.Task;
 
 namespace HodHod.Reports;
@@ -32,6 +34,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IRepository<Category, int> _categoryRepository;
     private readonly IRepository<SubCategory, int> _subCategoryRepository;
     private readonly IRepository<PhoneReportLimit, int> _phoneReportLimitRepository;
+    private readonly IRepository<Province, int> _provinceRepository;
+    private readonly IRepository<City, int> _cityRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
@@ -51,7 +55,9 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         ICacheManager cacheManager,
         IRepository<Category, int> categoryRepository,
         IRepository<SubCategory, int> subCategoryRepository,
-        IRepository<PhoneReportLimit, int> phoneReportLimitRepository)
+        IRepository<PhoneReportLimit, int> phoneReportLimitRepository,
+        IRepository<Province, int> provinceRepository,
+        IRepository<City, int> cityRepository)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -64,6 +70,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
         _phoneReportLimitRepository = phoneReportLimitRepository;
+        _provinceRepository = provinceRepository;
+        _cityRepository = cityRepository;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -145,17 +153,22 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             throw new EntityNotFoundException("SubCategory not found");
         }
 
+        var (city, province) = await NormalizeLocationAsync(input.City, input.Province);
+
         var report = new Report
         {
             CategoryId = category.Id,
             SubCategoryId = subCategory.Id,
+            UniqueId = $"HD-{Guid.NewGuid().ToString("N").Substring(0, 8)}",
             Description = input.Description,
             Address = input.Address,
             Longitude = input.Longitude,
             Latitude = input.Latitude,
             PhoneNumber = long.Parse(normalized),
-            Province = input.Province,
-            City = input.City,
+            //Province = input.Province,
+            //City = input.City,
+            Province = province,
+            City = city,
             PersianCreationTime = PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now),
             Status = ReportStatus.New,
             //Priority = input.Priority,
@@ -213,10 +226,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
     }
     /// <summary>
-    /// Retrieves reports filtered based on the current admin's role.
+    /// Retrieves reports for admins with paging, sorting and filtering.
+    /// Reports are limited based on the admin role.
     /// </summary>
     [AbpAuthorize]
-    public async Task<List<ReportDto>> GetReportsForAdminAsync()
+    public async Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input)
     {
         var user = await GetCurrentUserAsync();
         var roles = await UserManager.GetRolesAsync(user);
@@ -229,8 +243,9 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             throw new AbpAuthorizationException("Not authorized to view reports.");
         }
 
-        var query = _reportRepository.GetAll();
+        input.Normalize();
 
+        var query = _reportRepository.GetAllIncluding(r => r.Files, r => r.Category, r => r.SubCategory);
         if (roles.Contains(StaticRoleNames.Host.CityAdmin))
         {
             if (!string.IsNullOrEmpty(user.City))
@@ -245,9 +260,97 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 query = query.Where(r => r.Province == user.Province);
             }
         }
-        // SuperAdmin can see all reports without filtering
 
-        var reports = await query.Include(r => r.Files).ToListAsync();
-        return ObjectMapper.Map<List<ReportDto>>(reports);
+        if (input.CategoryId.HasValue)
+        {
+            query = query.Where(r => r.Category.PublicId == input.CategoryId.Value);
+        }
+
+        if (input.SubCategoryId.HasValue)
+        {
+            query = query.Where(r => r.SubCategory.PublicId == input.SubCategoryId.Value);
+        }
+
+        if (input.StartDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime >= input.StartDate.Value);
+        }
+
+        if (input.EndDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime <= input.EndDate.Value);
+        }
+
+        if (!string.IsNullOrEmpty(input.Province))
+        {
+            query = query.Where(r => r.Province == input.Province);
+        }
+
+        if (!string.IsNullOrEmpty(input.City))
+        {
+            query = query.Where(r => r.City == input.City);
+        }
+
+        var totalCount = await query.CountAsync();
+
+
+        var reports = await query
+            .OrderBy(input.Sorting)
+            .PageBy<Report>(input)
+            .ToListAsync();
+
+        var dto = ObjectMapper.Map<List<ReportDto>>(reports);
+        return new PagedResultDto<ReportDto>(totalCount, dto);
     }
+
+    private async Task<(string city, string province)> NormalizeLocationAsync(string city, string province)
+    {
+        province = TrimPrefix(province);
+        city = TrimPrefix(city);
+
+        if (!string.IsNullOrEmpty(province))
+        {
+            var provinceEntity = await _provinceRepository.FirstOrDefaultAsync(p => p.Name == province);
+            if (provinceEntity != null)
+            {
+                province = provinceEntity.Name;
+
+                if (!string.IsNullOrEmpty(city))
+                {
+                    var cityEntity = await _cityRepository.FirstOrDefaultAsync(c => c.Name == city && c.ProvinceId == provinceEntity.Id);
+                    if (cityEntity != null)
+                    {
+                        city = cityEntity.Name;
+                    }
+                }
+            }
+        }
+
+        return (city, province);
+    }
+
+    private static string TrimPrefix(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return name;
+        }
+
+        name = name.Trim();
+        if (name.StartsWith("استان "))
+        {
+            name = name.Substring(6);
+        }
+        if (name.StartsWith("شهرستان "))
+        {
+            name = name.Substring(8);
+        }
+        if (name.StartsWith("شهر "))
+        {
+            name = name.Substring(4);
+        }
+
+        return name;
+    }
+
 }
