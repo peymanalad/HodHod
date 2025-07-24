@@ -18,19 +18,10 @@ public class CreateReportDto
 
     [StringLength(1024)]
     public string Address { get; set; }
+    
+    public double Latitude { get; set; }
 
-    public double? Longitude { get; set; }
-
-    public double? Latitude { get; set; }
-
-    [StringLength(50)]
-    public string Province { get; set; }
-
-    [StringLength(50)]
-    public string City { get; set; }
-
-    //public ReportPriority Priority { get; set; }
-
+    public double Longitude { get; set; }
     [Required]
     public string PhoneNumber { get; set; }
 

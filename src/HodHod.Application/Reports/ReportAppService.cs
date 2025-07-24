@@ -42,12 +42,13 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IAppFolders _appFolders;
     private readonly ISmsSender _smsSender;
     private readonly ICacheManager _cacheManager;
+    private readonly ILocationAppService _locationAppService;
 
     public ReportAppService(
         IRepository<Report, Guid> reportRepository,
         IRepository<ReportFile, Guid> reportFileRepository,
         //IBinaryObjectManager binaryObjectManager,
-        ITempFileCacheManager tempFileCacheManager, 
+        ITempFileCacheManager tempFileCacheManager,
         //IPasswordlessLoginManager passwordlessLoginManager)
         IPasswordlessLoginManager passwordlessLoginManager,
         IAppFolders appFolders,
@@ -57,7 +58,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<SubCategory, int> subCategoryRepository,
         IRepository<PhoneReportLimit, int> phoneReportLimitRepository,
         IRepository<Province, int> provinceRepository,
-        IRepository<City, int> cityRepository)
+        IRepository<City, int> cityRepository,
+        ILocationAppService locationAppService)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -72,6 +74,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _phoneReportLimitRepository = phoneReportLimitRepository;
         _provinceRepository = provinceRepository;
         _cityRepository = cityRepository;
+        _locationAppService = locationAppService;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -153,7 +156,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             throw new EntityNotFoundException("SubCategory not found");
         }
 
-        var (city, province) = await NormalizeLocationAsync(input.City, input.Province);
+        var loc = await _locationAppService.ReverseGeocodeAsync(latitude: input.Latitude, longitude: input.Longitude);
 
         var report = new Report
         {
@@ -165,13 +168,10 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             Longitude = input.Longitude,
             Latitude = input.Latitude,
             PhoneNumber = long.Parse(normalized),
-            //Province = input.Province,
-            //City = input.City,
-            Province = province,
-            City = city,
+            Province = loc.Province,
+            City = loc.City,
             PersianCreationTime = PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now),
             Status = ReportStatus.New,
-            //Priority = input.Priority,
             IsReferred = false,
             IsStarred = false,
             IsArchived = false
@@ -217,8 +217,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 await _reportFileRepository.InsertAsync(new ReportFile
                 {
                     ReportId = report.Id,
-                    //BinaryObjectId = binary.Id,
-                    //FileName = info.FileName
                     FileName = info.FileName,
                     FilePath = uniqueName
                 });
@@ -291,6 +289,16 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             query = query.Where(r => r.City == input.City);
         }
 
+        if (!string.IsNullOrWhiteSpace(input.PhoneNumber))
+        {
+            var normalized = PhoneNumberHelper.Normalize(input.PhoneNumber);
+            if (!string.IsNullOrWhiteSpace(normalized))
+            {
+                var digits = long.Parse(normalized);
+                query = query.Where(r => r.PhoneNumber == digits);
+            }
+        }
+
         var totalCount = await query.CountAsync();
 
 
@@ -300,6 +308,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .ToListAsync();
 
         var dto = ObjectMapper.Map<List<ReportDto>>(reports);
+
         return new PagedResultDto<ReportDto>(totalCount, dto);
     }
 
