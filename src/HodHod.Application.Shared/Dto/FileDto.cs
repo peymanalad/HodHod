@@ -5,6 +5,7 @@ namespace HodHod.Dto;
 
 public class FileDto
 {
+    public Guid? Id { get; set; }
     [Required]
     public string FileName { get; set; }
 
@@ -12,6 +13,7 @@ public class FileDto
 
     [Required]
     public string FileToken { get; set; }
+    public string Base64Data { get; set; }
 
     public FileDto()
     {

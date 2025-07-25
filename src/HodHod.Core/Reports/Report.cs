@@ -57,9 +57,11 @@ public class Report : FullAuditedEntity<Guid>
     public bool IsArchived { get; set; }
 
     public ICollection<ReportFile> Files { get; set; }
+    public ICollection<ReportNote> Notes { get; set; }
 
     public Report()
     {
         Files = new List<ReportFile>();
+        Notes = new List<ReportNote>();
     }
 }

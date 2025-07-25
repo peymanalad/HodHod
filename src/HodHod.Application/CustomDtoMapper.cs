@@ -198,8 +198,8 @@ internal static class CustomDtoMapper
             .ForMember(d => d.SubCategoryId,
                 opt => opt.MapFrom(r => r.SubCategory.PublicId))
             .ForMember(d => d.UniqueId,
-                opt => opt.MapFrom(r => r.UniqueId));
-
+                opt => opt.MapFrom(r => r.UniqueId))
+            .ForMember(d => d.IsStarredByCurrentUser, opt => opt.Ignore());
         //configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>();
         //configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>();
         //configuration.CreateMap<UpdatePhoneReportLimitDto, PhoneReportLimit>();
@@ -215,9 +215,13 @@ internal static class CustomDtoMapper
             .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))))
             .ForMember(d => d.CategoryId, opt => opt.Ignore())
             .ForMember(d => d.SubCategoryId, opt => opt.Ignore());
+        configuration.CreateMap<CreateReportNoteDto, ReportNote>();
+        configuration.CreateMap<UpdateReportNoteDto, ReportNote>();
         configuration.CreateMap<LocationResult, LocationResultDto>();
         configuration.CreateMap<Province, ProvinceDto>();
         configuration.CreateMap<City, CityDto>();
+        configuration.CreateMap<ReportNote, ReportNoteDto>()
+            .ForMember(d => d.CreatorUserName, opt => opt.Ignore());
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }

@@ -67,6 +67,9 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<Province> Provinces { get; set; }
 
     public virtual DbSet<City> Cities { get; set; }
+    public virtual DbSet<ReportNote> ReportNotes { get; set; }
+
+    public virtual DbSet<ReportStar> ReportStars { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
     {
@@ -168,6 +171,23 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
             b.HasOne(rf => rf.Report)
                 .WithMany(r => r.Files)
                 .HasForeignKey(rf => rf.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HodHod.Reports.ReportNote>(b =>
+        {
+            b.HasOne(n => n.Report)
+                .WithMany(r => r.Notes)
+                .HasForeignKey(n => n.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HodHod.Reports.ReportStar>(b =>
+        {
+            b.HasIndex(s => new { s.ReportId, s.UserId }).IsUnique();
+            b.HasOne(s => s.Report)
+                .WithMany()
+                .HasForeignKey(s => s.ReportId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

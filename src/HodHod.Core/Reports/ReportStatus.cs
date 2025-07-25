@@ -8,8 +8,7 @@ namespace HodHod.Reports;
 
 public enum ReportStatus
 {
-    New,
-    InProgress,
-    Completed,
-    Rejected
+    Unreviewed = 0,
+    Approved = 1,
+    Rejected = 2
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
@@ -10,10 +11,8 @@ public interface IReportAppService : IApplicationService
 {
     Task SendReportOtpAsync(SendReportOtpInput input);
     Task SubmitReport(CreateReportDto input);
-    /// <summary>
-    /// Returns reports filtered based on the role of the current user.
-    /// Super admins see everything, province admins see their province
-    /// and city admins see their city.
-    /// </summary>
     Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input);
+    Task ChangeReportStatus(ChangeReportStatusDto input);
+    Task StarReport(EntityDto<Guid> input);
+    Task UnstarReport(EntityDto<Guid> input);
 }

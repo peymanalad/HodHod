@@ -36,6 +36,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IRepository<PhoneReportLimit, int> _phoneReportLimitRepository;
     private readonly IRepository<Province, int> _provinceRepository;
     private readonly IRepository<City, int> _cityRepository;
+    private readonly IRepository<ReportStar, Guid> _reportStarRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
@@ -59,7 +60,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<PhoneReportLimit, int> phoneReportLimitRepository,
         IRepository<Province, int> provinceRepository,
         IRepository<City, int> cityRepository,
-        ILocationAppService locationAppService)
+        ILocationAppService locationAppService,
+        IRepository<ReportStar, Guid> reportStarRepository)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -75,6 +77,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _provinceRepository = provinceRepository;
         _cityRepository = cityRepository;
         _locationAppService = locationAppService;
+        _reportStarRepository = reportStarRepository;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -171,7 +174,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             Province = loc.Province,
             City = loc.City,
             PersianCreationTime = PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now),
-            Status = ReportStatus.New,
+            Status = ReportStatus.Unreviewed,
             IsReferred = false,
             IsStarred = false,
             IsArchived = false
@@ -309,7 +312,86 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var dto = ObjectMapper.Map<List<ReportDto>>(reports);
 
+        var starredIds = await _reportStarRepository.GetAll()
+            .Where(s => s.UserId == user.Id)
+            .Select(s => s.ReportId)
+            .ToListAsync();
+        foreach (var d in dto)
+        {
+            d.IsStarredByCurrentUser = starredIds.Contains(d.Id);
+        }
         return new PagedResultDto<ReportDto>(totalCount, dto);
+    }
+
+    [AbpAuthorize]
+    public async Task ChangeReportStatus(ChangeReportStatusDto input)
+    {
+        var user = await GetCurrentUserAsync();
+        await EnsureReportAccessAsync(input.Id, user);
+
+        var report = await _reportRepository.FirstOrDefaultAsync(input.Id);
+        if (report == null)
+        {
+            throw new EntityNotFoundException("Report not found");
+        }
+
+        report.Status = input.Status;
+        await _reportRepository.UpdateAsync(report);
+    }
+
+    [AbpAuthorize]
+    public async Task StarReport(EntityDto<Guid> input)
+    {
+        var user = await GetCurrentUserAsync();
+        await EnsureReportAccessAsync(input.Id, user);
+
+        var exists = await _reportStarRepository.FirstOrDefaultAsync(s => s.ReportId == input.Id && s.UserId == user.Id);
+        if (exists == null)
+        {
+            await _reportStarRepository.InsertAsync(new ReportStar { ReportId = input.Id, UserId = user.Id });
+        }
+    }
+
+    [AbpAuthorize]
+    public async Task UnstarReport(EntityDto<Guid> input)
+    {
+        var user = await GetCurrentUserAsync();
+        await EnsureReportAccessAsync(input.Id, user);
+
+        var star = await _reportStarRepository.FirstOrDefaultAsync(s => s.ReportId == input.Id && s.UserId == user.Id);
+        if (star != null)
+        {
+            await _reportStarRepository.DeleteAsync(star);
+        }
+    }
+
+    private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
+    {
+        var roles = await UserManager.GetRolesAsync(user);
+        if (!(roles.Contains(StaticRoleNames.Host.Admin) ||
+              roles.Contains(StaticRoleNames.Host.SuperAdmin) ||
+              roles.Contains(StaticRoleNames.Host.ProvinceAdmin) ||
+              roles.Contains(StaticRoleNames.Host.CityAdmin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            var report = await _reportRepository.FirstOrDefaultAsync(reportId);
+            if (report != null && !string.IsNullOrEmpty(user.City) && report.City != user.City)
+            {
+                throw new AbpAuthorizationException("Not authorized to access this report");
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            var report = await _reportRepository.FirstOrDefaultAsync(reportId);
+            if (report != null && !string.IsNullOrEmpty(user.Province) && report.Province != user.Province)
+            {
+                throw new AbpAuthorizationException("Not authorized to access this report");
+            }
+        }
     }
 
     private async Task<(string city, string province)> NormalizeLocationAsync(string city, string province)

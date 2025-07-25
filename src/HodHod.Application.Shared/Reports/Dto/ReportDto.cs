@@ -25,6 +25,7 @@ public class ReportDto : EntityDto<Guid>
     public bool IsReferred { get; set; }
     public bool IsStarred { get; set; }
     public bool IsArchived { get; set; }
+    public bool IsStarredByCurrentUser { get; set; }
     public DateTime CreationTime { get; set; }
     public List<string> FilePaths { get; set; }
 }
