@@ -94,7 +94,9 @@ run_migrations:
     - builder
   needs:
     - job: build_and_push_image
+    - job: build_and_push_migrator_image
     - job: run_migrations
+      optional: true
   variables:
     PROJECT_ENDPOINT_VARIABLES: ""
     FOLDER_NAME: ""
