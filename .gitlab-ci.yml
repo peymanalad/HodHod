@@ -85,7 +85,7 @@ run_migrations:
       -e "ConnectionStrings__Default=${ConnectionStrings__Default}" \
       ${DC_IMAGE_NAME}-migrator:${CI_PIPELINE_IID} "
   rules:
-    - if: $CI_COMMIT_BRANCH == "production" || $CI_COMMIT_BRANCH == "stage"
+    - if: $CI_COMMIT_BRANCH == "production" || $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
 
 .deploy_template:
@@ -96,7 +96,6 @@ run_migrations:
     - job: build_and_push_image
     - job: build_and_push_migrator_image
     - job: run_migrations
-      optional: true
   variables:
     PROJECT_ENDPOINT_VARIABLES: ""
     FOLDER_NAME: ""
