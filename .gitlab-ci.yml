@@ -89,8 +89,8 @@ build_and_push_migrator_image:
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      docker run --rm --network hodhod-backend-app-network \
-      -e "ConnectionStrings__Default=${ConnectionStrings__Default}" \
+      docker run --rm --network hodhod-backend-app-network
+      -e "ConnectionStrings__Default=${ConnectionStrings__Default}"
       ${DC_IMAGE_NAME}-migrator:${CI_PIPELINE_IID} "
 
 .deploy_template:
