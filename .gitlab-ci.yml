@@ -84,20 +84,12 @@ build_and_push_migrator_image:
     - chmod 400 deploy-key.pem
   script:
     - $SSH_COMMAND "sudo mkdir -p $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file && sudo chown -R $SERVER_USER:$SERVER_USER $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file"
-    - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
+    - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh ./deployments/scripts/migration.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
     - $SSH_COMMAND "
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      if ! docker network ls | grep -q 'hodhod-backend-app-network'; then
-        docker network create hodhod-backend-app-network
-      fi
-
-      if [ -f ".env" ]; then
-        export $(grep -v '^#' .env | xargs)
-      fi &&
-
-      docker run --rm --network hodhod-backend-app-network --env-file .env ${DC_IMAGE_NAME}-migrator:${DC_IMAGE_TAG} "
+      ./migration.sh $DEPLOY_ENV "
 
 .deploy_template:
   stage: deploy
@@ -131,7 +123,7 @@ build_and_push_migrator_image:
     - chmod 400 deploy-key.pem
   script:
     - $SSH_COMMAND "sudo mkdir -p $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file && sudo chown -R $SERVER_USER:$SERVER_USER $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file"
-    - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
+    - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh ./deployments/scripts/migration.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
     - $SSH_COMMAND "
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
