@@ -18,7 +18,7 @@ services:
     depends_on:
       - mssql
     volumes:
-      - ./data_backend:/App/UploadFiles
+      - ./data_backend:/var/hodhod/
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
@@ -44,6 +44,15 @@ services:
       - SA_PASSWORD=${MSSQL_SA_PASSWORD}
       - MSSQL_PID=developer
       - MSSQL_TCP_PORT=1433
+
+  redis:
+    image: docker.repo.stinascloud.ir/redis:8.0.3
+    container_name: mobinn_redis_${DC_DEPLOY_ENV}
+    ports:
+      - "6379:6379"
+    networks:
+      - mobinn-backend-app-network
+    restart: always
 
 networks:
   hodhod-backend-app-network:
