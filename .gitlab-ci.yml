@@ -89,7 +89,7 @@ build_and_push_migrator_image:
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      docker network create hodhod-backend-app-network
+      docker network create hodhod-backend-app-network --ignore
 
       if [ -f ".env" ]; then
         export $(grep -v '^#' .env | xargs)
