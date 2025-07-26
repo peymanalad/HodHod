@@ -100,7 +100,8 @@ build_and_push_migrator_image:
   needs:
     - job: build_and_push_image
     - job: build_and_push_migrator_image
-    - job: run_migrations
+    - job: migrate_stage
+      optional: true
   variables:
     PROJECT_ENDPOINT_VARIABLES: ""
     FOLDER_NAME: ""
