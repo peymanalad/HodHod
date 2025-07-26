@@ -57,3 +57,4 @@ services:
 networks:
   hodhod-backend-app-network:
     driver: bridge
+    external: true
