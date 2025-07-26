@@ -89,7 +89,9 @@ build_and_push_migrator_image:
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      docker network create hodhod-backend-app-network --ignore
+      if ! docker network ls | grep -q "hodhod-backend-app-network"; then
+      docker network create hodhod-backend-app-network
+      fi
 
       if [ -f ".env" ]; then
         export $(grep -v '^#' .env | xargs)
@@ -152,6 +154,21 @@ migrate_stage:
   rules:
     - if: $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
+    - if: $TEST == "true"
+      when: manual
+
+migrate_production:
+  extends: .run_migrations
+  variables:
+    PROJECT_ENDPOINT_VARIABLES: $PRODUCTION_ENV_FILE
+    FOLDER_NAME: $CI_PROJECT_NAME-production
+    SERVER_HOST: $PRODUCTION_SERVER_HOST
+    DEPLOY_ENV: production
+    APP_PORT: $PRODUCTION_PORT
+    ENDPOINT: $PRODUCTION_ENDPOINT
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
     - if: $TEST == "true"
       when: manual
 
