@@ -15,4 +15,7 @@ public interface IReportAppService : IApplicationService
     Task ChangeReportStatus(ChangeReportStatusDto input);
     Task StarReport(EntityDto<Guid> input);
     Task UnstarReport(EntityDto<Guid> input);
+    Task<List<ProvinceReportPercentageDto>> GetReportDistributionByProvinceAsync();
+    Task<List<CategoryReportPercentageDto>> GetReportDistributionByCategoryAsync();
+    Task<List<SubCategoryReportCountDto>> GetReportCountBySubCategoryAsync();
 }

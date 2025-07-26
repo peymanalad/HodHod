@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Abp.OpenIddict.Applications;
 using Abp.OpenIddict.Authorizations;
 using Abp.OpenIddict.EntityFrameworkCore;
 using Abp.OpenIddict.Scopes;
 using Abp.OpenIddict.Tokens;
+using Abp.Timing;
 using Abp.Zero.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -201,6 +204,37 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
 
 
         modelBuilder.ConfigureOpenIddict();
+    }
+
+    private void UpdatePersianModificationTimes()
+    {
+        foreach (var entry in ChangeTracker.Entries<Report>())
+        {
+            if (entry.State == EntityState.Modified &&
+                entry.Property("LastModificationTime").IsModified)
+            {
+                entry.Entity.PersianLastModificationTime =
+                    PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now);
+            }
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        UpdatePersianModificationTimes();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        UpdatePersianModificationTimes();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdatePersianModificationTimes();
+        return base.SaveChangesAsync(cancellationToken);
     }
 }
 

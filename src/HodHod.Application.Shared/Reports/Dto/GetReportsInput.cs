@@ -13,6 +13,13 @@ public class GetReportsInput : PagedAndSortedInputDto, IShouldNormalize
     public string Province { get; set; }
     public string City { get; set; }
     public string PhoneNumber { get; set; }
+    public string UniqueId { get; set; }
+    public ReportStatus? Status { get; set; }
+    public long? StartPersianCreationTime { get; set; }
+    public long? EndPersianCreationTime { get; set; }
+    public int? StartPersianCreationClock { get; set; }
+    public int? EndPersianCreationClock { get; set; }
+    public ReportFileCategory? FileCategory { get; set; }
 
     public void Normalize()
     {

@@ -302,6 +302,62 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             }
         }
 
+
+        if (!string.IsNullOrWhiteSpace(input.UniqueId))
+        {
+            query = query.Where(r => r.UniqueId.Contains(input.UniqueId));
+        }
+
+        if (input.Status.HasValue)
+        {
+            query = query.Where(r => r.Status == input.Status.Value);
+        }
+
+        if (input.StartPersianCreationTime.HasValue)
+        {
+            query = query.Where(r => r.PersianCreationTime >= input.StartPersianCreationTime.Value);
+        }
+
+        if (input.EndPersianCreationTime.HasValue)
+        {
+            query = query.Where(r => r.PersianCreationTime <= input.EndPersianCreationTime.Value);
+        }
+
+        if (input.StartPersianCreationClock.HasValue)
+        {
+            var startClock = input.StartPersianCreationClock.Value;
+            query = query.Where(r => (r.PersianCreationTime % 1000000) >= startClock);
+        }
+
+        if (input.EndPersianCreationClock.HasValue)
+        {
+            var endClock = input.EndPersianCreationClock.Value;
+            query = query.Where(r => (r.PersianCreationTime % 1000000) <= endClock);
+        }
+
+        if (input.FileCategory.HasValue)
+        {
+            var imageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
+            var videoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
+            var audioExts = new[] { ".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+            var docExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
+
+            switch (input.FileCategory.Value)
+            {
+                case ReportFileCategory.Image:
+                    query = query.Where(r => r.Files.Any(f => imageExts.Any(e => f.FileName.ToLower().EndsWith(e))));
+                    break;
+                case ReportFileCategory.Video:
+                    query = query.Where(r => r.Files.Any(f => videoExts.Any(e => f.FileName.ToLower().EndsWith(e))));
+                    break;
+                case ReportFileCategory.Audio:
+                    query = query.Where(r => r.Files.Any(f => audioExts.Any(e => f.FileName.ToLower().EndsWith(e))));
+                    break;
+                case ReportFileCategory.Document:
+                    query = query.Where(r => r.Files.Any(f => docExts.Any(e => f.FileName.ToLower().EndsWith(e))));
+                    break;
+            }
+        }
         var totalCount = await query.CountAsync();
 
 
@@ -364,6 +420,168 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             await _reportStarRepository.DeleteAsync(star);
         }
     }
+
+    [AbpAuthorize]
+    public async Task<List<ProvinceReportPercentageDto>> GetReportDistributionByProvinceAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        IQueryable<Report> query = _reportRepository.GetAll();
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+            else
+            {
+                return new List<ProvinceReportPercentageDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+            else
+            {
+                return new List<ProvinceReportPercentageDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<ProvinceReportPercentageDto>();
+        }
+
+        var data = await query
+            .GroupBy(r => r.Province)
+            .Select(g => new { Province = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return data
+            .Select(d => new ProvinceReportPercentageDto
+            {
+                Province = d.Province,
+                Percentage = (double)d.Count * 100 / totalCount
+            })
+            .ToList();
+    }
+
+    [AbpAuthorize]
+    public async Task<List<CategoryReportPercentageDto>> GetReportDistributionByCategoryAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        IQueryable<Report> query = _reportRepository.GetAllIncluding(r => r.Category);
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+            else
+            {
+                return new List<CategoryReportPercentageDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+            else
+            {
+                return new List<CategoryReportPercentageDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<CategoryReportPercentageDto>();
+        }
+
+        var data = await query
+            .GroupBy(r => new { r.CategoryId, r.Category.PublicId, r.Category.Name })
+            .Select(g => new { g.Key.PublicId, g.Key.Name, Count = g.Count() })
+            .ToListAsync();
+
+        return data
+            .Select(d => new CategoryReportPercentageDto
+            {
+                CategoryId = d.PublicId,
+                CategoryName = d.Name,
+                Percentage = (double)d.Count * 100 / totalCount
+            })
+            .ToList();
+    }
+
+    [AbpAuthorize]
+    public async Task<List<SubCategoryReportCountDto>> GetReportCountBySubCategoryAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        IQueryable<Report> query = _reportRepository.GetAllIncluding(r => r.SubCategory);
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+            else
+            {
+                return new List<SubCategoryReportCountDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+            else
+            {
+                return new List<SubCategoryReportCountDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var data = await query
+            .GroupBy(r => new { r.SubCategoryId, r.SubCategory.PublicId, r.SubCategory.Name })
+            .Select(g => new { g.Key.PublicId, g.Key.Name, Count = g.Count() })
+            .ToListAsync();
+
+        return data
+            .Select(d => new SubCategoryReportCountDto
+            {
+                SubCategoryId = d.PublicId,
+                SubCategoryName = d.Name,
+                Count = d.Count
+            })
+            .ToList();
+    }
+
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
     {
