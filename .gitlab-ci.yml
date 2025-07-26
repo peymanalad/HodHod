@@ -89,14 +89,15 @@ build_and_push_migrator_image:
       echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
-      if ! docker network ls | grep -q \"hodhod-backend-app-network\"; then
+      if ! docker network ls | grep -q 'hodhod-backend-app-network'; then
         docker network create hodhod-backend-app-network
+      fi
+
+      if [ -f ".env" ]; then
+        export $(grep -v '^#' .env | xargs)
       fi &&
-      if [ -f \".env\" ]; then
-        export \$(grep -v '^#' .env | xargs)
-      fi &&
-      
-      docker run --rm --network hodhod-backend-app-network --env-file .env \${DC_IMAGE_NAME}-migrator:\${DC_IMAGE_TAG} "
+
+      docker run --rm --network hodhod-backend-app-network --env-file .env ${DC_IMAGE_NAME}-migrator:${DC_IMAGE_TAG} "
 
 .deploy_template:
   stage: deploy
