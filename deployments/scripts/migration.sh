@@ -10,11 +10,11 @@ ENVIRONMENT=$1
 
 
 main() {
-      if ! docker network ls | grep -q 'hodhod-backend-app-network'; then
-        docker network create hodhod-backend-app-network
-      fi
+  if ! docker network ls | grep -q 'hodhod-backend-app-network'; then
+    docker network create hodhod-backend-app-network
+  fi
 
-      docker run --rm --network hodhod-backend-app-network --env-file .env ${DC_IMAGE_NAME}-migrator:${DC_IMAGE_TAG}
+  docker run --rm --network hodhod-backend-app-network --env-file .env ${DC_IMAGE_NAME}-migrator:${DC_IMAGE_TAG}
 }
 
 main "$@"
