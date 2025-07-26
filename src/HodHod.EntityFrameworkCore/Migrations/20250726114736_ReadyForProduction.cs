@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HodHod.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class ReadyForProduction : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -357,6 +357,8 @@ namespace HodHod.Migrations
                     SignInToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GoogleAuthenticatorKey = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecoveryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Province = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
                     LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -463,6 +465,7 @@ namespace HodHod.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
                     LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -534,6 +537,49 @@ namespace HodHod.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AppInvoices", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppPhoneReportLimits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PhoneNumber = table.Column<long>(type: "bigint", nullable: false),
+                    MaxFileCount = table.Column<int>(type: "int", nullable: false),
+                    MaxFileSizeInBytes = table.Column<long>(type: "bigint", nullable: false),
+                    MaxReportsPerHour = table.Column<int>(type: "int", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierUserId = table.Column<long>(type: "bigint", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeleterUserId = table.Column<long>(type: "bigint", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppPhoneReportLimits", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppProvinces",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierUserId = table.Column<long>(type: "bigint", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeleterUserId = table.Column<long>(type: "bigint", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppProvinces", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -1027,6 +1073,7 @@ namespace HodHod.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
@@ -1045,6 +1092,33 @@ namespace HodHod.Migrations
                         principalTable: "AppCategories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppCities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ProvinceId = table.Column<int>(type: "int", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierUserId = table.Column<long>(type: "bigint", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeleterUserId = table.Column<long>(type: "bigint", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppCities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AppCities_AppProvinces_ProvinceId",
+                        column: x => x.ProvinceId,
+                        principalTable: "AppProvinces",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1217,6 +1291,7 @@ namespace HodHod.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UniqueId = table.Column<string>(type: "nvarchar(12)", maxLength: 12, nullable: true),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     SubCategoryId = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
@@ -1226,9 +1301,9 @@ namespace HodHod.Migrations
                     PhoneNumber = table.Column<long>(type: "bigint", nullable: false),
                     Province = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    PersianCreationTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
-                    PersianLastModificationTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
-                    PersianDeletionTime = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
+                    PersianCreationTime = table.Column<long>(type: "bigint", nullable: true),
+                    PersianLastModificationTime = table.Column<long>(type: "bigint", nullable: true),
+                    PersianDeletionTime = table.Column<long>(type: "bigint", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     Priority = table.Column<int>(type: "int", nullable: false),
                     IsReferred = table.Column<bool>(type: "bit", nullable: false),
@@ -1314,6 +1389,59 @@ namespace HodHod.Migrations
                     table.PrimaryKey("PK_AppReportFiles", x => x.Id);
                     table.ForeignKey(
                         name: "FK_AppReportFiles_AppReports_ReportId",
+                        column: x => x.ReportId,
+                        principalTable: "AppReports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppReportNotes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReportId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Text = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierUserId = table.Column<long>(type: "bigint", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeleterUserId = table.Column<long>(type: "bigint", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppReportNotes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AppReportNotes_AppReports_ReportId",
+                        column: x => x.ReportId,
+                        principalTable: "AppReports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppReportStars",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReportId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorUserId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppReportStars", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AppReportStars_AbpUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AbpUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AppReportStars_AppReports_ReportId",
                         column: x => x.ReportId,
                         principalTable: "AppReports",
                         principalColumn: "Id",
@@ -1713,6 +1841,11 @@ namespace HodHod.Migrations
                 columns: new[] { "TenantId", "UserId", "ReadState" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AppCities_ProvinceId",
+                table: "AppCities",
+                column: "ProvinceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AppFriendships_FriendTenantId_FriendUserId",
                 table: "AppFriendships",
                 columns: new[] { "FriendTenantId", "FriendUserId" });
@@ -1738,6 +1871,11 @@ namespace HodHod.Migrations
                 column: "ReportId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AppReportNotes_ReportId",
+                table: "AppReportNotes",
+                column: "ReportId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AppReports_CategoryId",
                 table: "AppReports",
                 column: "CategoryId");
@@ -1746,6 +1884,17 @@ namespace HodHod.Migrations
                 name: "IX_AppReports_SubCategoryId",
                 table: "AppReports",
                 column: "SubCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppReportStars_ReportId_UserId",
+                table: "AppReportStars",
+                columns: new[] { "ReportId", "UserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppReportStars_UserId",
+                table: "AppReportStars",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppSubCategories_CategoryId",
@@ -1899,16 +2048,28 @@ namespace HodHod.Migrations
                 name: "AppChatMessages");
 
             migrationBuilder.DropTable(
+                name: "AppCities");
+
+            migrationBuilder.DropTable(
                 name: "AppFriendships");
 
             migrationBuilder.DropTable(
                 name: "AppInvoices");
 
             migrationBuilder.DropTable(
+                name: "AppPhoneReportLimits");
+
+            migrationBuilder.DropTable(
                 name: "AppRecentPasswords");
 
             migrationBuilder.DropTable(
                 name: "AppReportFiles");
+
+            migrationBuilder.DropTable(
+                name: "AppReportNotes");
+
+            migrationBuilder.DropTable(
+                name: "AppReportStars");
 
             migrationBuilder.DropTable(
                 name: "AppSubscriptionPaymentProducts");
@@ -1936,6 +2097,9 @@ namespace HodHod.Migrations
 
             migrationBuilder.DropTable(
                 name: "AbpWebhookEvents");
+
+            migrationBuilder.DropTable(
+                name: "AppProvinces");
 
             migrationBuilder.DropTable(
                 name: "AppReports");

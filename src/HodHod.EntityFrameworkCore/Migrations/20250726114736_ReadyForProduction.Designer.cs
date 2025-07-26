@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HodHod.Migrations
 {
     [DbContext(typeof(HodHodDbContext))]
-    [Migration("20250724101307_AddProvinceCity")]
-    partial class AddProvinceCity
+    [Migration("20250726114736_ReadyForProduction")]
+    partial class ReadyForProduction
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2684,6 +2684,76 @@ namespace HodHod.Migrations
                     b.ToTable("AppReportFiles");
                 });
 
+            modelBuilder.Entity("HodHod.Reports.ReportNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DeleterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("LastModifierUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("AppReportNotes");
+                });
+
+            modelBuilder.Entity("HodHod.Reports.ReportStar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReportId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AppReportStars");
+                });
+
             modelBuilder.Entity("HodHod.Storage.BinaryObject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3065,6 +3135,36 @@ namespace HodHod.Migrations
                     b.Navigation("Report");
                 });
 
+            modelBuilder.Entity("HodHod.Reports.ReportNote", b =>
+                {
+                    b.HasOne("HodHod.Reports.Report", "Report")
+                        .WithMany("Notes")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("HodHod.Reports.ReportStar", b =>
+                {
+                    b.HasOne("HodHod.Reports.Report", "Report")
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HodHod.Authorization.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Abp.Application.Features.EditionFeatureSetting", b =>
                 {
                     b.HasOne("Abp.Application.Editions.Edition", "Edition")
@@ -3156,6 +3256,8 @@ namespace HodHod.Migrations
             modelBuilder.Entity("HodHod.Reports.Report", b =>
                 {
                     b.Navigation("Files");
+
+                    b.Navigation("Notes");
                 });
 #pragma warning restore 612, 618
         }
