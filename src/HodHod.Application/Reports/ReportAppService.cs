@@ -246,7 +246,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         input.Normalize();
 
-        var query = _reportRepository.GetAllIncluding(r => r.Files, r => r.Category, r => r.SubCategory);
+        //var query = _reportRepository.GetAllIncluding(r => r.Files, r => r.Category, r => r.SubCategory);
+        var query = _reportRepository.GetAllIncluding(r => r.Files, r => r.Category, r => r.SubCategory, r => r.Notes);
         if (roles.Contains(StaticRoleNames.Host.CityAdmin))
         {
             if (!string.IsNullOrEmpty(user.City))
@@ -358,6 +359,10 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                     break;
             }
         }
+        var countImageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
+        var countVideoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
+        var countAudioExts = new[] { ".webm",".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+        var countDocExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
         var totalCount = await query.CountAsync();
 
 
@@ -372,9 +377,33 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .Where(s => s.UserId == user.Id)
             .Select(s => s.ReportId)
             .ToListAsync();
-        foreach (var d in dto)
+        for (int i = 0; i < dto.Count; i++)
         {
+            var d = dto[i];
+            var r = reports[i];
             d.IsStarredByCurrentUser = starredIds.Contains(d.Id);
+            var counts = new ReportFileCountsDto();
+            foreach (var f in r.Files)
+            {
+                var ext = Path.GetExtension(f.FileName).ToLowerInvariant();
+                if (countImageExts.Any(e => ext.EndsWith(e)))
+                {
+                    counts.ImageCount++;
+                }
+                else if (countVideoExts.Any(e => ext.EndsWith(e)))
+                {
+                    counts.VideoCount++;
+                }
+                else if (countAudioExts.Any(e => ext.EndsWith(e)))
+                {
+                    counts.VoiceCount++;
+                }
+                else if (countDocExts.Any(e => ext.EndsWith(e)))
+                {
+                    counts.DocumentCount++;
+                }
+            }
+            d.FileCounts = counts;
         }
         return new PagedResultDto<ReportDto>(totalCount, dto);
     }

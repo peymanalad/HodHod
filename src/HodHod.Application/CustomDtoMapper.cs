@@ -193,13 +193,16 @@ internal static class CustomDtoMapper
                 opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
             .ForMember(d => d.PhoneNumber,
                 opt => opt.MapFrom(r => r.PhoneNumber.ToString()))
-            .ForMember(d => d.CategoryId,
-                opt => opt.MapFrom(r => r.Category.PublicId))
-            .ForMember(d => d.SubCategoryId,
-                opt => opt.MapFrom(r => r.SubCategory.PublicId))
+            .ForMember(d => d.CategoryName,
+                opt => opt.MapFrom(r => r.Category.Name))
+            .ForMember(d => d.SubCategoryName,
+                opt => opt.MapFrom(r => r.SubCategory.Name))
             .ForMember(d => d.UniqueId,
                 opt => opt.MapFrom(r => r.UniqueId))
-            .ForMember(d => d.IsStarredByCurrentUser, opt => opt.Ignore());
+            .ForMember(d => d.NoteCount, opt => opt.MapFrom(r => r.Notes.Count))
+            .ForMember(d => d.HasNotes, opt => opt.MapFrom(r => r.Notes.Any()))
+            .ForMember(d => d.IsStarredByCurrentUser, opt => opt.Ignore())
+            .ForMember(d => d.FileCounts, opt => opt.Ignore());
         //configuration.CreateMap<PhoneReportLimit, PhoneReportLimitDto>();
         //configuration.CreateMap<CreatePhoneReportLimitDto, PhoneReportLimit>();
         //configuration.CreateMap<UpdatePhoneReportLimitDto, PhoneReportLimit>();
