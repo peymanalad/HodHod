@@ -500,7 +500,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .Select(d => new ProvinceReportPercentageDto
             {
                 Province = d.Province,
-                Percentage = (double)d.Count * 100 / totalCount
+                Percentage = (double)d.Count * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)d.Count * 100 / totalCount)
             })
             .ToList();
     }
@@ -556,7 +557,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             {
                 CategoryId = d.PublicId,
                 CategoryName = d.Name,
-                Percentage = (double)d.Count * 100 / totalCount
+                Percentage = (double)d.Count * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)d.Count * 100 / totalCount)
             })
             .ToList();
     }
@@ -568,6 +570,10 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         var roles = await UserManager.GetRolesAsync(user);
 
         IQueryable<Report> query = _reportRepository.GetAllIncluding(r => r.SubCategory);
+        var endDate = Clock.Now;
+        var startDate = endDate.AddDays(-1);
+        var previousStartDate = startDate.AddDays(-1);
+        query = query.Where(r => r.CreationTime >= previousStartDate);
 
         if (roles.Contains(StaticRoleNames.Host.CityAdmin))
         {
@@ -598,15 +604,36 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var data = await query
             .GroupBy(r => new { r.SubCategoryId, r.SubCategory.PublicId, r.SubCategory.Name })
-            .Select(g => new { g.Key.PublicId, g.Key.Name, Count = g.Count() })
+            .Select(g => new
+            {
+                g.Key.PublicId,
+                g.Key.Name,
+                CurrentCount = g.Count(r => r.CreationTime >= startDate),
+                PreviousCount = g.Count(r => r.CreationTime < startDate)
+            })
             .ToListAsync();
 
         return data
-            .Select(d => new SubCategoryReportCountDto
+            .Select(d =>
             {
-                SubCategoryId = d.PublicId,
-                SubCategoryName = d.Name,
-                Count = d.Count
+                double growth;
+                if (d.PreviousCount == 0)
+                {
+                    growth = d.CurrentCount > 0 ? 100 : 0;
+                }
+                else
+                {
+                    growth = ((double)d.CurrentCount - d.PreviousCount) * 100 / d.PreviousCount;
+                }
+                return new SubCategoryReportCountDto
+                {
+                    SubCategoryId = d.PublicId,
+                    SubCategoryName = d.Name,
+                    Count = d.CurrentCount,
+                    GrowthPercentage = growth,
+                    CountFormatted = FormatLargeNumber(d.CurrentCount),
+                    GrowthPercentageFormatted = FormatPercentage(growth)
+                };
             })
             .ToList();
     }
@@ -689,6 +716,28 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
 
         return name;
+    }
+
+    private static string FormatLargeNumber(double value)
+    {
+        if (value >= 1_000_000_000)
+        {
+            return (value / 1_000_000_000d).ToString("0.#") + "B";
+        }
+        if (value >= 1_000_000)
+        {
+            return (value / 1_000_000d).ToString("0.#") + "M";
+        }
+        if (value >= 1_000)
+        {
+            return (value / 1_000d).ToString("0.#") + "K";
+        }
+        return value.ToString("0");
+    }
+
+    private static string FormatPercentage(double value)
+    {
+        return value.ToString("0.00");
     }
 
 }
