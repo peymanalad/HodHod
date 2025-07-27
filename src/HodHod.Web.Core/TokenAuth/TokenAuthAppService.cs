@@ -262,7 +262,10 @@ public class TokenAuthAppService : HodHodAppServiceBase, ITokenAuthAppService
             TwoFactorRememberClientToken = twoFactorRememberClientToken,
             UserId = loginResult.User.Id,
             ReturnUrl = returnUrl,
-            Roles = roles.ToList()
+            Roles = roles.ToList(),
+            FirstName = loginResult.User.Name,
+            LastName = loginResult.User.Surname,
+            FullName = $"{loginResult.User.Name} {loginResult.User.Surname}"
         };
     }
 

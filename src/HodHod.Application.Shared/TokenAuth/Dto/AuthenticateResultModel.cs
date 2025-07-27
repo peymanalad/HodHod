@@ -28,4 +28,7 @@ public class AuthenticateResultModel
     public string RefreshToken { get; set; }
     public string c { get; set; }
     public IList<string> Roles { get; set; }
+    public string FullName { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 }
