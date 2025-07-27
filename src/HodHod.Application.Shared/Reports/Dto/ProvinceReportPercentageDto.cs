@@ -4,4 +4,5 @@ public class ProvinceReportPercentageDto
 {
     public string Province { get; set; }
     public double Percentage { get; set; }
+    public string PercentageFormatted { get; set; }
 }

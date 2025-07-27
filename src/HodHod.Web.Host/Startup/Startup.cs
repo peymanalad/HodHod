@@ -107,7 +107,13 @@ public class Startup
         {
             OpenIddictRegistrar.Register(services, _appConfiguration);
             services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme,
-                options => { options.LoginPath = "/Ui/Login"; });
+                                //options => { options.LoginPath = "/Ui/Login"; });
+                                options =>
+                                {
+                                    options.LoginPath = "/Ui/Login";
+                                    options.ExpireTimeSpan = TimeSpan.FromDays(3650);
+                                    options.SlidingExpiration = true;
+                                });
         }
 
         services.Configure<SecurityStampValidatorOptions>(opts =>
