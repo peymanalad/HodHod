@@ -11,6 +11,9 @@ using HodHod.Categories.Dto;
 using System;
 using Abp.Domain.Entities;
 using HodHod.Authorization.Roles;
+using HodHod.BlackLists;
+using Microsoft.AspNetCore.Http;
+using Abp.UI;
 
 namespace HodHod.Categories;
 
@@ -19,18 +22,25 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
 {
     private readonly IRepository<Category, int> _categoryRepository;
     private readonly IRepository<SubCategory, int> _subCategoryRepository;
+    private readonly IRepository<BlackListEntry, int> _blackListRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CategoryAppService(
         IRepository<Category, int> categoryRepository,
-        IRepository<SubCategory, int> subCategoryRepository)
+        IRepository<SubCategory, int> subCategoryRepository,
+        IRepository<BlackListEntry, int> blackListRepository,
+        IHttpContextAccessor httpContextAccessor)
     {
         _categoryRepository = categoryRepository;
         _subCategoryRepository = subCategoryRepository;
+        _blackListRepository = blackListRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     [AbpAllowAnonymous]
     public async Task<ListResultDto<CategoryDto>> GetAll()
     {
+        await CheckBlackListFromHeaderAsync();
         var categories = await _categoryRepository.GetAll()
             .Include(c => c.SubCategories)
             .ToListAsync();
@@ -42,6 +52,7 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAllowAnonymous]
     public async Task<CategoryDto> Get(EntityDto<Guid> input)
     {
+        await CheckBlackListFromHeaderAsync();
         var category = await _categoryRepository.GetAll()
             .Include(c => c.SubCategories)
             .FirstAsync(c => c.PublicId == input.Id);
@@ -51,6 +62,7 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
     [AbpAllowAnonymous]
     public async Task<ListResultDto<SubCategoryDto>> GetSubCategories(EntityDto<Guid> input)
     {
+        await CheckBlackListFromHeaderAsync();
         var category = await _categoryRepository
             .GetAll()
             .FirstOrDefaultAsync(c => c.PublicId == input.Id);
@@ -123,4 +135,21 @@ public class CategoryAppService : HodHodAppServiceBase, ICategoryAppService
         await CurrentUnitOfWork.SaveChangesAsync();
     }
 
+    private async Task CheckBlackListFromHeaderAsync()
+    {
+        var phone = _httpContextAccessor.HttpContext?.Request?.Headers["X-PhoneNumber"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return;
+        }
+
+        var normalized = PhoneNumberHelper.Normalize(phone);
+        if (long.TryParse(normalized, out var digits))
+        {
+            if (await _blackListRepository.CountAsync(e => e.PhoneNumber == digits) > 0)
+            {
+                throw new UserFriendlyException(L("PhoneNumberBlackListed"));
+            }
+        }
+    }
 }

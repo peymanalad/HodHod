@@ -23,6 +23,8 @@ using System.Linq.Dynamic.Core;
 
 
 using Task = System.Threading.Tasks.Task;
+using HodHod.BlackLists;
+using Microsoft.AspNetCore.Http;
 
 namespace HodHod.Reports;
 
@@ -37,6 +39,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly IRepository<Province, int> _provinceRepository;
     private readonly IRepository<City, int> _cityRepository;
     private readonly IRepository<ReportStar, Guid> _reportStarRepository;
+    private readonly IRepository<BlackListEntry, int> _blackListRepository;
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
@@ -44,6 +47,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly ISmsSender _smsSender;
     private readonly ICacheManager _cacheManager;
     private readonly ILocationAppService _locationAppService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public ReportAppService(
         IRepository<Report, Guid> reportRepository,
@@ -61,7 +65,9 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<Province, int> provinceRepository,
         IRepository<City, int> cityRepository,
         ILocationAppService locationAppService,
-        IRepository<ReportStar, Guid> reportStarRepository)
+        IRepository<ReportStar, Guid> reportStarRepository,
+        IRepository<BlackListEntry, int> blackListRepository,
+        IHttpContextAccessor httpContextAccessor)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -78,9 +84,13 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _cityRepository = cityRepository;
         _locationAppService = locationAppService;
         _reportStarRepository = reportStarRepository;
+        _blackListRepository = blackListRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
+        await CheckBlackListFromHeaderAsync();
+        await EnsureNotBlacklistedAsync(input.PhoneNumber);
         if (String.IsNullOrEmpty(input.PhoneNumber))
         {
             return;
@@ -122,6 +132,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
     public async System.Threading.Tasks.Task SubmitReport(CreateReportDto input)
     {
+        await CheckBlackListFromHeaderAsync();
+        await EnsureNotBlacklistedAsync(input.PhoneNumber);
         var normalized = PhoneNumberHelper.Normalize(input.PhoneNumber);
         await _passwordlessLoginManager.VerifyPasswordlessLoginCode(
             AbpSession.TenantId,
@@ -361,8 +373,22 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
         var countImageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
         var countVideoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
-        var countAudioExts = new[] { ".webm",".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+        var countAudioExts = new[] { ".webm", ".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
         var countDocExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
+
+
+        var starredIdsQuery = _reportStarRepository.GetAll()
+            .Where(s => s.UserId == user.Id)
+            .Select(s => s.ReportId);
+        List<Guid> starredIds = null;
+        if (input.OnlyStarredByCurrentUser)
+        {
+            starredIds = await starredIdsQuery.ToListAsync();
+            query = query.Where(r => starredIds.Contains(r.Id));
+        }
+
+
+
         var totalCount = await query.CountAsync();
 
 
@@ -373,10 +399,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var dto = ObjectMapper.Map<List<ReportDto>>(reports);
 
-        var starredIds = await _reportStarRepository.GetAll()
-            .Where(s => s.UserId == user.Id)
-            .Select(s => s.ReportId)
-            .ToListAsync();
+        starredIds ??= await starredIdsQuery.ToListAsync();
         for (int i = 0; i < dto.Count; i++)
         {
             var d = dto[i];
@@ -738,6 +761,39 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private static string FormatPercentage(double value)
     {
         return value.ToString("0.00");
+    }
+
+    private async Task EnsureNotBlacklistedAsync(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return;
+        }
+        var normalized = PhoneNumberHelper.Normalize(phoneNumber);
+        if (long.TryParse(normalized, out var digits))
+        {
+            if (await _blackListRepository.CountAsync(e => e.PhoneNumber == digits) > 0)
+            {
+                throw new UserFriendlyException(L("PhoneNumberBlackListed"));
+            }
+        }
+    }
+
+    private async Task CheckBlackListFromHeaderAsync()
+    {
+        var phone = _httpContextAccessor.HttpContext?.Request?.Headers["X-PhoneNumber"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return;
+        }
+        var normalized = PhoneNumberHelper.Normalize(phone);
+        if (long.TryParse(normalized, out var digits))
+        {
+            if (await _blackListRepository.CountAsync(e => e.PhoneNumber == digits) > 0)
+            {
+                throw new UserFriendlyException(L("PhoneNumberBlackListed"));
+            }
+        }
     }
 
 }

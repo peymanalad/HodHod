@@ -9,6 +9,10 @@ using HodHod.Authorization;
 using HodHod.Categories.Dto;
 using Abp.Domain.Entities;
 using HodHod.Authorization.Roles;
+using HodHod.BlackLists;
+using Microsoft.AspNetCore.Http;
+using Abp.UI;
+using System.Linq;
 
 namespace HodHod.Categories;
 
@@ -18,15 +22,25 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     private readonly IRepository<SubCategory, int> _subCategoryRepository;
     private readonly IRepository<Category, int> _categoryRepository;
 
-    public SubCategoryAppService(IRepository<SubCategory, int> subCategoryRepository, IRepository<Category, int> categoryRepository)
+    private readonly IRepository<BlackListEntry, int> _blackListRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public SubCategoryAppService(
+        IRepository<SubCategory, int> subCategoryRepository,
+        IRepository<Category, int> categoryRepository,
+        IRepository<BlackListEntry, int> blackListRepository,
+        IHttpContextAccessor httpContextAccessor)
     {
         _subCategoryRepository = subCategoryRepository;
         _categoryRepository = categoryRepository;
+        _blackListRepository = blackListRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     [AbpAllowAnonymous]
     public async Task<ListResultDto<SubCategoryDto>> GetAll()
     {
+        await CheckBlackListFromHeaderAsync();
         var subs = await _subCategoryRepository.GetAllListAsync();
         return new ListResultDto<SubCategoryDto>(
             ObjectMapper.Map<List<SubCategoryDto>>(subs));
@@ -35,6 +49,7 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
     [AbpAllowAnonymous]
     public async Task<SubCategoryDto> Get(EntityDto<Guid> input)
     {
+        await CheckBlackListFromHeaderAsync();
         var sub = await _subCategoryRepository
             .GetAll()
             .Include(s => s.Category)
@@ -137,5 +152,23 @@ public class SubCategoryAppService : HodHodAppServiceBase, ISubCategoryAppServic
 
         await _subCategoryRepository.DeleteAsync(sub);
         await CurrentUnitOfWork.SaveChangesAsync();
+    }
+
+    private async Task CheckBlackListFromHeaderAsync()
+    {
+        var phone = _httpContextAccessor.HttpContext?.Request?.Headers["X-PhoneNumber"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return;
+        }
+
+        var normalized = PhoneNumberHelper.Normalize(phone);
+        if (long.TryParse(normalized, out var digits))
+        {
+            if (await _blackListRepository.CountAsync(e => e.PhoneNumber == digits) > 0)
+            {
+                throw new UserFriendlyException(L("PhoneNumberBlackListed"));
+            }
+        }
     }
 }

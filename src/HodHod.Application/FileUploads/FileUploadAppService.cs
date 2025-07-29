@@ -12,13 +12,16 @@ using HodHod.Storage.FileValidator;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Abp.Domain.Repositories;
 using Abp.IO.Extensions;
 using Abp.UI;
 using Abp.Web.Models;
+using HodHod.BlackLists;
 using Microsoft.AspNetCore.Mvc;
 using HodHod.DemoUiComponents.Dto;
 using HodHod.Storage;
 using HodHod.Storage.FileValidator;
+using System.Linq;
 
 namespace HodHod.FileUploads;
 
@@ -37,15 +40,21 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITempFileCacheManager _tempFileCacheManager;
+    private readonly IRepository<BlackListEntry, int> _blackListRepository;
 
-    public FileUploadAppService(IHttpContextAccessor httpContextAccessor, ITempFileCacheManager tempFileCacheManager)
+    public FileUploadAppService(
+        IHttpContextAccessor httpContextAccessor,
+        ITempFileCacheManager tempFileCacheManager,
+        IRepository<BlackListEntry, int> blackListRepository)
     {
         _httpContextAccessor = httpContextAccessor;
         _tempFileCacheManager = tempFileCacheManager;
+        _blackListRepository = blackListRepository;
     }
 
     public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles([FromForm] IFormCollection form)
     {
+        await CheckBlackListFromHeaderAsync();
         var files = _httpContextAccessor.HttpContext?.Request?.Form?.Files;
         if (files == null || files.Count == 0)
         {
@@ -80,5 +89,22 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         }
 
         return outputs;
+    }
+
+    private async Task CheckBlackListFromHeaderAsync()
+    {
+        var phone = _httpContextAccessor.HttpContext?.Request?.Headers["X-PhoneNumber"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return;
+        }
+        var normalized = PhoneNumberHelper.Normalize(phone);
+        if (long.TryParse(normalized, out var digits))
+        {
+            if (await _blackListRepository.CountAsync(e => e.PhoneNumber == digits) > 0)
+            {
+                throw new UserFriendlyException(L("PhoneNumberBlackListed"));
+            }
+        }
     }
 }

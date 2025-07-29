@@ -25,6 +25,7 @@ using HodHod.MultiTenancy.Accounting;
 using HodHod.MultiTenancy.Payments;
 using HodHod.Storage;
 using HodHod.Reports;
+using HodHod.BlackLists;
 
 namespace HodHod.EntityFrameworkCore;
 
@@ -73,6 +74,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<ReportNote> ReportNotes { get; set; }
 
     public virtual DbSet<ReportStar> ReportStars { get; set; }
+    public virtual DbSet<BlackListEntry> BlackListEntries { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
     {
@@ -192,6 +194,11 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
                 .WithMany()
                 .HasForeignKey(s => s.ReportId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BlackListEntry>(b =>
+        {
+            b.HasIndex(e => e.PhoneNumber).IsUnique();
         });
 
         modelBuilder.Entity<City>(b =>

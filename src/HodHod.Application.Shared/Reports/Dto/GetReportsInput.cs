@@ -20,6 +20,7 @@ public class GetReportsInput : PagedAndSortedInputDto, IShouldNormalize
     public int? StartPersianCreationClock { get; set; }
     public int? EndPersianCreationClock { get; set; }
     public ReportFileCategory? FileCategory { get; set; }
+    public bool OnlyStarredByCurrentUser { get; set; }
 
     public void Normalize()
     {

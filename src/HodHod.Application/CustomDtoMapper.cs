@@ -24,6 +24,8 @@ using HodHod.Authorization.Users.Delegation.Dto;
 using HodHod.Authorization.Users.Dto;
 using HodHod.Authorization.Users.Importing.Dto;
 using HodHod.Authorization.Users.Profile.Dto;
+using HodHod.BlackLists;
+using HodHod.BlackLists.Dto;
 using HodHod.Chat;
 using HodHod.Chat.Dto;
 using HodHod.Common.Dto;
@@ -193,6 +195,10 @@ internal static class CustomDtoMapper
                 opt.MapFrom(r => r.Files.Select(f => f.FilePath).ToList()))
             .ForMember(d => d.PhoneNumber,
                 opt => opt.MapFrom(r => r.PhoneNumber.ToString()))
+            .ForMember(d => d.CategoryId,
+                opt => opt.MapFrom(r => r.Category.PublicId))
+            .ForMember(d => d.SubCategoryId,
+                opt => opt.MapFrom(r => r.SubCategory.PublicId))
             .ForMember(d => d.CategoryName,
                 opt => opt.MapFrom(r => r.Category.Name))
             .ForMember(d => d.SubCategoryName,
@@ -225,6 +231,13 @@ internal static class CustomDtoMapper
         configuration.CreateMap<City, CityDto>();
         configuration.CreateMap<ReportNote, ReportNoteDto>()
             .ForMember(d => d.CreatorUserName, opt => opt.Ignore());
+
+        configuration.CreateMap<BlackListEntry, BlackListEntryDto>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(s => s.PhoneNumber.ToString()));
+        configuration.CreateMap<CreateBlackListEntryDto, BlackListEntry>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
+        configuration.CreateMap<UpdateBlackListEntryDto, BlackListEntry>()
+            .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(r => long.Parse(PhoneNumberHelper.Normalize(r.PhoneNumber))));
         /* ADD YOUR OWN CUSTOM AUTOMAPPER MAPPINGS HERE */
     }
 }
