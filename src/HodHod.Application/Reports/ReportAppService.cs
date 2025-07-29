@@ -43,7 +43,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     //private readonly IBinaryObjectManager _binaryObjectManager;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IPasswordlessLoginManager _passwordlessLoginManager;
-    private readonly IAppFolders _appFolders;
+    //private readonly IAppFolders _appFolders;
+    private readonly IMinioFileManager _minioFileManager;
     private readonly ISmsSender _smsSender;
     private readonly ICacheManager _cacheManager;
     private readonly ILocationAppService _locationAppService;
@@ -56,7 +57,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         ITempFileCacheManager tempFileCacheManager,
         //IPasswordlessLoginManager passwordlessLoginManager)
         IPasswordlessLoginManager passwordlessLoginManager,
-        IAppFolders appFolders,
+        //IAppFolders appFolders,
         ISmsSender smsSender,
         ICacheManager cacheManager,
         IRepository<Category, int> categoryRepository,
@@ -67,14 +68,15 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         ILocationAppService locationAppService,
         IRepository<ReportStar, Guid> reportStarRepository,
         IRepository<BlackListEntry, int> blackListRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IMinioFileManager minioFileManager)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
         //_binaryObjectManager = binaryObjectManager;
         _tempFileCacheManager = tempFileCacheManager;
         _passwordlessLoginManager = passwordlessLoginManager;
-        _appFolders = appFolders;
+        //_appFolders = appFolders;
         _smsSender = smsSender;
         _cacheManager = cacheManager;
         _categoryRepository = categoryRepository;
@@ -86,6 +88,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _reportStarRepository = reportStarRepository;
         _blackListRepository = blackListRepository;
         _httpContextAccessor = httpContextAccessor;
+        _minioFileManager = minioFileManager;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -224,9 +227,10 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
                 var ext = Path.GetExtension(info.FileName);
                 var uniqueName = Guid.NewGuid().ToString("N") + ext;
-                var savePath = Path.Combine(_appFolders.ReportFilesFolder, uniqueName);
+                //var savePath = Path.Combine(_appFolders.ReportFilesFolder, uniqueName);
 
-                File.WriteAllBytes(savePath, info.File);
+                //File.WriteAllBytes(savePath, info.File);
+                await _minioFileManager.UploadAsync(uniqueName, info.File);
                 _tempFileCacheManager.ClearFile(token);
 
                 await _reportFileRepository.InsertAsync(new ReportFile
@@ -352,7 +356,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         {
             var imageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
             var videoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
-            var audioExts = new[] { ".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+            var audioExts = new[] { ".webm",".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
             var docExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
 
             switch (input.FileCategory.Value)

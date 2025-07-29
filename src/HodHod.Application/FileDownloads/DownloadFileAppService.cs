@@ -20,19 +20,22 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 {
     private readonly IRepository<ReportFile, Guid> _reportFileRepository;
     private readonly ITempFileCacheManager _tempFileCacheManager;
-    private readonly IAppFolders _appFolders;
+    //private readonly IAppFolders _appFolders;
     private readonly IMimeTypeMap _mimeTypeMap;
+    private readonly IMinioFileManager _minioFileManager;
 
     public DownloadFileAppService(
         IRepository<ReportFile, Guid> reportFileRepository,
         ITempFileCacheManager tempFileCacheManager,
-        IAppFolders appFolders,
-        IMimeTypeMap mimeTypeMap)
+        //IAppFolders appFolders,
+        IMimeTypeMap mimeTypeMap,
+        IMinioFileManager minioFileManager)
     {
         _reportFileRepository = reportFileRepository;
         _tempFileCacheManager = tempFileCacheManager;
-        _appFolders = appFolders;
+        //_appFolders = appFolders;
         _mimeTypeMap = mimeTypeMap;
+        _minioFileManager = minioFileManager;
     }
 
     public async Task<List<FileDto>> GetReportFiles(Guid reportId)
@@ -71,13 +74,15 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
             return null;
         }
 
-        var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
-        if (!File.Exists(physicalPath))
+        //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
+        //if (!File.Exists(physicalPath))
+        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        if (bytes == null || bytes.Length == 0)
         {
             return null;
         }
 
-        var bytes = await File.ReadAllBytesAsync(physicalPath);
+        //var bytes = await File.ReadAllBytesAsync(physicalPath);
         var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
         var dto = new FileDto(file.FileName, mimeType)
         {
@@ -95,8 +100,10 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
             return null;
         }
 
-        var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
-        if (!File.Exists(physicalPath))
+        //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
+        //if (!File.Exists(physicalPath))
+        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        if (bytes == null || bytes.Length == 0)
         {
             return null;
         }
@@ -104,7 +111,8 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
         var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
         if (mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
-            using var image = System.Drawing.Image.FromFile(physicalPath);
+            //using var image = System.Drawing.Image.FromFile(physicalPath);
+            using var image = System.Drawing.Image.FromStream(new MemoryStream(bytes));
             const int max = 150;
             var width = image.Width;
             var height = image.Height;
@@ -134,7 +142,8 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 
             using var ms = new MemoryStream();
             thumbnail.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-            var bytes = ms.ToArray();
+            //var bytes = ms.ToArray();
+            bytes = ms.ToArray();
             var dto = new FileDto(file.FileName, MimeTypeNames.ImageJpeg)
             {
                 Base64Data = $"data:{MimeTypeNames.ImageJpeg};base64,{Convert.ToBase64String(bytes)}"
@@ -144,11 +153,14 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
         }
         else if (mimeType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
         {
+            var tempInput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}_{file.FileName}");
+            await File.WriteAllBytesAsync(tempInput, bytes);
             var tempOutput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
 
             try
             {
-                var success = await FFMpegCore.FFMpeg.SnapshotAsync(physicalPath, tempOutput, null, TimeSpan.FromSeconds(1));
+                //var success = await FFMpegCore.FFMpeg.SnapshotAsync(physicalPath, tempOutput, null, TimeSpan.FromSeconds(1));
+                var success = await FFMpegCore.FFMpeg.SnapshotAsync(tempInput, tempOutput, null, TimeSpan.FromSeconds(1));
                 if (!success || !File.Exists(tempOutput))
                     throw new Exception("Snapshot creation failed.");
 
@@ -183,7 +195,7 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 
                 using var ms = new MemoryStream();
                 thumbnail.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-                var bytes = ms.ToArray();
+                bytes = ms.ToArray();
 
                 return new FileDto(file.FileName, MimeTypeNames.ImageJpeg)
                 {
@@ -192,6 +204,12 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
             }
             finally
             {
+                try
+                {
+                    if (File.Exists(tempInput))
+                        File.Delete(tempInput);
+                }
+                catch { }
                 try
                 {
                     if (File.Exists(tempOutput))
@@ -212,13 +230,15 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
             return null;
         }
 
-        var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
-        if (!File.Exists(physicalPath))
+        //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
+        //if (!File.Exists(physicalPath))
+        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        if (bytes == null || bytes.Length == 0)
         {
             return null;
         }
 
-        var bytes = await File.ReadAllBytesAsync(physicalPath);
+        //var bytes = await File.ReadAllBytesAsync(physicalPath);
         var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
         var dto = new FileDto(file.FileName, mimeType)
         {
@@ -227,6 +247,34 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
         _tempFileCacheManager.SetFile(dto.FileToken, new TempFileInfo(file.FileName, mimeType, bytes));
         return dto;
     }
+
+    public async Task<List<FileDto>> GetReportFilesData(Guid reportId)
+    {
+        var files = await _reportFileRepository.GetAll()
+            .Where(f => f.ReportId == reportId)
+            .ToListAsync();
+
+        var result = new List<FileDto>();
+        foreach (var file in files)
+        {
+            var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+            if (bytes == null || bytes.Length == 0)
+            {
+                continue;
+            }
+            var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
+            var dto = new FileDto(file.FileName, mimeType)
+            {
+                Base64Data = $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}",
+                Id = file.Id
+            };
+            _tempFileCacheManager.SetFile(dto.FileToken, new TempFileInfo(file.FileName, mimeType, bytes));
+            result.Add(dto);
+        }
+
+        return result;
+    }
+
 
     public async Task<ReportFileCountsDto> GetReportFileCounts(Guid reportId)
     {
