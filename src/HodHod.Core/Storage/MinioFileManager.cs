@@ -200,11 +200,17 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
         {
             // Object might not exist yet; ignore
         }
+        var expirySecondsStr = Environment.GetEnvironmentVariable("MINIO_LINK_EXPIRETION_SECONDS");
+
+        if (!int.TryParse(expirySecondsStr, out var expireSec))
+        {
+            expireSec = 3600;
+        }
 
         var req = new PresignedGetObjectArgs()
             .WithBucket(_bucket)
             .WithObject(objectName)
-            .WithExpiry(expirySeconds);
+            .WithExpiry(expireSec);
 
         req.WithHeaders(new Dictionary<string, string>
         {
@@ -218,10 +224,16 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
     public async Task<string> GetPresignedPutUrlAsync(string objectName, int expirySeconds, string contentType)
     {
         await EnsureBucketAsync();
+        var expirySecondsStr = Environment.GetEnvironmentVariable("MINIO_LINK_EXPIRETION_SECONDS");
+
+        if (!int.TryParse(expirySecondsStr, out var expireSec))
+        {
+            expireSec = 3600;
+        }
         var req = new PresignedPutObjectArgs()
             .WithBucket(_bucket)
             .WithObject(objectName)
-            .WithExpiry(expirySeconds)
+            .WithExpiry(expireSec)
             .WithHeaders(new Dictionary<string, string> { ["Content-Type"] = contentType });
         return await _client.PresignedPutObjectAsync(req);
     }
