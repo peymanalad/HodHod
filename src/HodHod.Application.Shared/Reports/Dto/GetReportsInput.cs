@@ -21,6 +21,7 @@ public class GetReportsInput : PagedAndSortedInputDto, IShouldNormalize
     public int? EndPersianCreationClock { get; set; }
     public ReportFileCategory? FileCategory { get; set; }
     public bool? OnlyStarredByCurrentUser { get; set; }
+    public bool? HasNotes { get; set; }
 
     public void Normalize()
     {

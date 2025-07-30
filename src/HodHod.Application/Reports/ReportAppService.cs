@@ -378,6 +378,17 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             }
         }
 
+        if (input.HasNotes.HasValue)
+        {
+            if (input.HasNotes.Value)
+            {
+                query = query.Where(r => r.Notes.Any());
+            }
+            else
+            {
+                query = query.Where(r => !r.Notes.Any());
+            }
+        }
 
 
         var totalCount = await query.CountAsync();
