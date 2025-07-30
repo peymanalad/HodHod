@@ -1,7 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using Abp.Dependency;
 using Minio;
@@ -9,6 +9,7 @@ using Minio.DataModel.Args;
 using Minio.DataModel;
 using System.Security.AccessControl;
 using Twilio.TwiML.Voice;
+using System.Linq;
 
 namespace HodHod.Storage;
 
@@ -25,10 +26,37 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
         var secret = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "minioadmin";
         _bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET") ?? "hodhod";
 
-        _client = new MinioClient()
-            .WithEndpoint(endpoint)
-            .WithCredentials(access, secret)
-            .Build();
+        var useSslEnv = Environment.GetEnvironmentVariable("MINIO_USE_SSL");
+        bool useSsl = false;
+
+        if (!string.IsNullOrWhiteSpace(endpoint))
+        {
+            if (endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                useSsl = true;
+                endpoint = endpoint.Substring("https://".Length);
+            }
+            else if (endpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                endpoint = endpoint.Substring("http://".Length);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(useSslEnv) && bool.TryParse(useSslEnv, out var parsed))
+        {
+            useSsl = parsed;
+        }
+
+        var builder = new MinioClient()
+                .WithEndpoint(endpoint)
+                .WithCredentials(access, secret);
+
+        if (useSsl)
+        {
+            builder = builder.WithSSL();
+        }
+
+        _client = builder.Build();
     }
 
     private async System.Threading.Tasks.Task EnsureBucketAsync()
@@ -89,12 +117,20 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
             .WithStreamData(uploadStream)
             .WithObjectSize(uploadStream.Length);
 
-        if (compress)
+        args.WithHeaders(new Dictionary<string, string>
         {
-            args.WithHeaders(new Dictionary<string, string> { ["Content-Encoding"] = "gzip" });
-        }
+            ["x-amz-meta-compression"] = "gzip"
+        });
 
-        await _client.PutObjectAsync(args);
+        try
+        {
+            await _client.PutObjectAsync(args);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
 
         if (compress && compressed != null)
         {
@@ -139,26 +175,37 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
             args.WithOffsetAndLength(offset ?? 0, length ?? -1);
         }
 
+
+        var stat = await _client.StatObjectAsync(
+            new StatObjectArgs().WithBucket(_bucket).WithObject(objectName));
+
         await _client.GetObjectAsync(args.WithCallbackStream(stream => stream.CopyTo(ms)));
         ms.Position = 0;
 
-        // If data looks like gzip, decompress before returning
+        bool metadataGzip = stat.MetaData != null &&
+                            stat.MetaData.TryGetValue("x-amz-meta-compression", out var comp) &&
+                            comp.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0;
+
+        // If metadata or magic number indicates gzip, decompress before returning
+        bool looksGzip = false;
         if (ms.Length >= 3)
         {
             int b1 = ms.ReadByte();
             int b2 = ms.ReadByte();
             int b3 = ms.ReadByte();
             ms.Position = 0;
-            if (b1 == 0x1f && b2 == 0x8b && b3 == 0x08)
+            looksGzip = b1 == 0x1f && b2 == 0x8b && b3 == 0x08;
+        }
+
+        if (metadataGzip || looksGzip)
+        {
+            var decompressed = new MemoryStream();
+            using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
             {
-                var decompressed = new MemoryStream();
-                using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
-                {
-                    await gzip.CopyToAsync(decompressed);
-                }
-                decompressed.Position = 0;
-                return decompressed;
+                await gzip.CopyToAsync(decompressed);
             }
+            decompressed.Position = 0;
+            return decompressed;
         }
 
         return ms;
@@ -173,10 +220,26 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
     public async Task<string> GetPresignedGetUrlAsync(string objectName, int expirySeconds)
     {
         await EnsureBucketAsync();
+
+        var stat = await _client.StatObjectAsync(
+            new StatObjectArgs().WithBucket(_bucket).WithObject(objectName));
+
         var req = new PresignedGetObjectArgs()
             .WithBucket(_bucket)
             .WithObject(objectName)
             .WithExpiry(expirySeconds);
+
+        if (stat.MetaData != null &&
+            stat.MetaData.TryGetValue("x-amz-meta-compression", out var comp) &&
+            comp.Contains("gzip", StringComparison.OrdinalIgnoreCase))
+        {
+            req.WithHeaders(new Dictionary<string, string>
+            {
+                ["response-content-encoding"] = "gzip"
+            });
+        }
+
+
         return await _client.PresignedGetObjectAsync(req);
     }
 
