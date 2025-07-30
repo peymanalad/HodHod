@@ -216,7 +216,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
             if (uploads.Count > 0)
             {
-                await _minioFileManager.UploadManyAsync(uploads, compress: true);
+                await _minioFileManager.UploadManyAsync(uploads);
             }
         }
     }

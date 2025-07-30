@@ -13,9 +13,9 @@ public interface IMinioFileManager : ITransientDependency
     Task UploadStreamAsync(
         string objectName,
         Stream content,
-        string contentType,
-        bool compress = false);
-    Task UploadManyAsync(IEnumerable<(string Name, Stream Stream, string ContentType)> files, bool compress = false);
+        string contentType);
+
+    Task UploadManyAsync(IEnumerable<(string Name, Stream Stream, string ContentType)> files);
 
     Task<byte[]> DownloadAsync(string objectName);
 
