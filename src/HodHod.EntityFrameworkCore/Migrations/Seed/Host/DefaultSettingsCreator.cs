@@ -3,6 +3,7 @@ using Abp.Configuration;
 using Abp.Localization;
 using Abp.MultiTenancy;
 using Abp.Net.Mail;
+using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using HodHod.EntityFrameworkCore;
 
@@ -35,6 +36,7 @@ public class DefaultSettingsCreator
 
         //Languages
         AddSettingIfNotExists(LocalizationSettingNames.DefaultLanguage, "en", tenantId);
+        AddSettingIfNotExists(TimingSettingNames.TimeZone, "Iran Standard Time", tenantId);
     }
 
     private void AddSettingIfNotExists(string name, string value, int? tenantId = null)

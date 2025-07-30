@@ -41,15 +41,18 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITempFileCacheManager _tempFileCacheManager;
     private readonly IRepository<BlackListEntry, int> _blackListRepository;
+    private readonly IMinioFileManager _minioFileManager;
 
     public FileUploadAppService(
         IHttpContextAccessor httpContextAccessor,
         ITempFileCacheManager tempFileCacheManager,
-        IRepository<BlackListEntry, int> blackListRepository)
+        IRepository<BlackListEntry, int> blackListRepository,
+        IMinioFileManager minioFileManager)
     {
         _httpContextAccessor = httpContextAccessor;
         _tempFileCacheManager = tempFileCacheManager;
         _blackListRepository = blackListRepository;
+        _minioFileManager = minioFileManager;
     }
 
     public async Task<List<FileUploads.Dto.UploadFileOutput>> UploadFiles([FromForm] IFormCollection form)
@@ -90,6 +93,19 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
 
         return outputs;
     }
+
+    public async Task<string> GetPresignedUploadUrl(string fileName, string contentType, int expirySeconds = 3600)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(ext))
+        {
+            throw new UserFriendlyException("نوع فایل نامعتبر است!");
+        }
+
+        var uniqueName = Guid.NewGuid().ToString("N") + ext;
+        return await _minioFileManager.GetPresignedPutUrlAsync(uniqueName, expirySeconds, contentType);
+    }
+
 
     private async Task CheckBlackListFromHeaderAsync()
     {

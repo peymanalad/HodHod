@@ -10,4 +10,5 @@ namespace HodHod.FileUploads;
 public interface IFileUploadAppService : IApplicationService
 {
     Task<List<UploadFileOutput>> UploadFiles([FromForm] IFormCollection form);
+    Task<string> GetPresignedUploadUrl(string fileName, string contentType, int expirySeconds = 3600);
 }
