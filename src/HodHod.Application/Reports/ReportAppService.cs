@@ -521,6 +521,108 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     }
 
     [AbpAuthorize]
+    public async Task<List<FileCategoryReportPercentageDto>> GetReportDistributionByFileCategoryAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        IQueryable<ReportFile> query = _reportFileRepository.GetAllIncluding(f => f.Report);
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(f => f.Report.City == user.City);
+            }
+            else
+            {
+                return new List<FileCategoryReportPercentageDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(f => f.Report.Province == user.Province);
+            }
+            else
+            {
+                return new List<FileCategoryReportPercentageDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<FileCategoryReportPercentageDto>();
+        }
+
+        var imageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
+        var videoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
+        var audioExts = new[] { ".webm", ".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+        var docExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
+
+        var fileNames = await query.Select(f => f.FileName.ToLower()).ToListAsync();
+
+        int imageCount = 0, videoCount = 0, audioCount = 0, docCount = 0;
+        foreach (var name in fileNames)
+        {
+            if (imageExts.Any(e => name.EndsWith(e)))
+            {
+                imageCount++;
+            }
+            else if (videoExts.Any(e => name.EndsWith(e)))
+            {
+                videoCount++;
+            }
+            else if (audioExts.Any(e => name.EndsWith(e)))
+            {
+                audioCount++;
+            }
+            else if (docExts.Any(e => name.EndsWith(e)))
+            {
+                docCount++;
+            }
+            else
+            {
+                docCount++;
+            }
+        }
+
+        return new List<FileCategoryReportPercentageDto>
+        {
+            new FileCategoryReportPercentageDto
+            {
+                FileCategory = ReportFileCategory.Image,
+                Percentage = (double)imageCount * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)imageCount * 100 / totalCount)
+            },
+            new FileCategoryReportPercentageDto
+            {
+                FileCategory = ReportFileCategory.Video,
+                Percentage = (double)videoCount * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)videoCount * 100 / totalCount)
+            },
+            new FileCategoryReportPercentageDto
+            {
+                FileCategory = ReportFileCategory.Audio,
+                Percentage = (double)audioCount * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)audioCount * 100 / totalCount)
+            },
+            new FileCategoryReportPercentageDto
+            {
+                FileCategory = ReportFileCategory.Document,
+                Percentage = (double)docCount * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)docCount * 100 / totalCount)
+            }
+        };
+    }
+
+    [AbpAuthorize]
     public async Task<List<CategoryReportPercentageDto>> GetReportDistributionByCategoryAsync()
     {
         var user = await GetCurrentUserAsync();

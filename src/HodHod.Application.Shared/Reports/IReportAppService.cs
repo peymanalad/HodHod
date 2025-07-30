@@ -17,5 +17,6 @@ public interface IReportAppService : IApplicationService
     Task UnstarReport(EntityDto<Guid> input);
     Task<List<ProvinceReportPercentageDto>> GetReportDistributionByProvinceAsync();
     Task<List<CategoryReportPercentageDto>> GetReportDistributionByCategoryAsync();
+    Task<List<FileCategoryReportPercentageDto>> GetReportDistributionByFileCategoryAsync();
     Task<List<SubCategoryReportCountDto>> GetReportCountBySubCategoryAsync();
 }
