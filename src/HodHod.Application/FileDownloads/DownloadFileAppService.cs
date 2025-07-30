@@ -76,7 +76,11 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 
         //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
         //if (!File.Exists(physicalPath))
-        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        //var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        await using var stream = await _minioFileManager.DownloadStreamAsync(file.FilePath);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var bytes = ms.ToArray();
         if (bytes == null || bytes.Length == 0)
         {
             return null;
@@ -102,7 +106,11 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 
         //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
         //if (!File.Exists(physicalPath))
-        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        //var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        await using var stream = await _minioFileManager.DownloadStreamAsync(file.FilePath);
+        using var msStream = new MemoryStream();
+        await stream.CopyToAsync(msStream);
+        var bytes = msStream.ToArray();
         if (bytes == null || bytes.Length == 0)
         {
             return null;
@@ -232,7 +240,11 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
 
         //var physicalPath = Path.Combine(_appFolders.ReportFilesFolder, file.FilePath);
         //if (!File.Exists(physicalPath))
-        var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        //var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+        await using var stream = await _minioFileManager.DownloadStreamAsync(file.FilePath);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var bytes = ms.ToArray();
         if (bytes == null || bytes.Length == 0)
         {
             return null;
@@ -248,6 +260,19 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
         return dto;
     }
 
+    public async Task<string> GetReportFilePresignedUrl(Guid reportFileId, int expirySeconds = 3600)
+    {
+        var file = await _reportFileRepository.FirstOrDefaultAsync(reportFileId);
+        if (file == null)
+        {
+            return string.Empty;
+        }
+
+        return await _minioFileManager.GetPresignedGetUrlAsync(file.FilePath, expirySeconds);
+    }
+
+
+
     public async Task<List<FileDto>> GetReportFilesData(Guid reportId)
     {
         var files = await _reportFileRepository.GetAll()
@@ -255,12 +280,18 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
             .ToListAsync();
 
         var result = new List<FileDto>();
-        foreach (var file in files)
+        //foreach (var file in files)
+        var tasks = files.Select(async file =>
         {
-            var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+            //var bytes = await _minioFileManager.DownloadAsync(file.FilePath);
+            await using var stream = await _minioFileManager.DownloadStreamAsync(file.FilePath);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
             if (bytes == null || bytes.Length == 0)
             {
-                continue;
+                //continue;
+                return null;
             }
             var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
             var dto = new FileDto(file.FileName, mimeType)
@@ -269,8 +300,13 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
                 Id = file.Id
             };
             _tempFileCacheManager.SetFile(dto.FileToken, new TempFileInfo(file.FileName, mimeType, bytes));
-            result.Add(dto);
-        }
+            //    result.Add(dto);
+            //}
+            return dto;
+        });
+
+        var downloaded = await Task.WhenAll(tasks);
+        result.AddRange(downloaded.Where(d => d != null));
 
         return result;
     }

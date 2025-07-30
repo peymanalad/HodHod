@@ -133,10 +133,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         // await _smsSender.SendAsync(input.PhoneNumber, message);
     }
 
-    public async System.Threading.Tasks.Task SubmitReport(CreateReportDto input)
+    public async Task SubmitReport(CreateReportDto input)
     {
         await CheckBlackListFromHeaderAsync();
         await EnsureNotBlacklistedAsync(input.PhoneNumber);
+
         var normalized = PhoneNumberHelper.Normalize(input.PhoneNumber);
         await _passwordlessLoginManager.VerifyPasswordlessLoginCode(
             AbpSession.TenantId,
@@ -144,93 +145,65 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             input.OtpCode);
 
         var phoneDigits = long.Parse(normalized);
-        var limit = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == phoneDigits); var maxFileCount = limit?.MaxFileCount ?? PhoneReportLimitDefaults.MaxFileCount;
+        var limit = await _phoneReportLimitRepository.FirstOrDefaultAsync(l => l.PhoneNumber == phoneDigits);
+
+        var maxFileCount = limit?.MaxFileCount ?? PhoneReportLimitDefaults.MaxFileCount;
         var maxFileSize = limit?.MaxFileSizeInBytes ?? PhoneReportLimitDefaults.MaxFileSizeInBytes;
         var maxReportsPerHour = limit?.MaxReportsPerHour ?? PhoneReportLimitDefaults.MaxReportsPerHour;
 
-        var recentCount = await _reportRepository.CountAsync(r => r.PhoneNumber == phoneDigits && r.CreationTime > Clock.Now.AddHours(-1)); if (recentCount >= maxReportsPerHour)
-        {
+        var recentCount = await _reportRepository.CountAsync(r => r.PhoneNumber == phoneDigits && r.CreationTime > Clock.Now.AddHours(-1));
+        if (recentCount >= maxReportsPerHour)
             throw new UserFriendlyException("Report limit reached");
-        }
 
         if (input.FileTokens != null && input.FileTokens.Count > maxFileCount)
-        {
             throw new UserFriendlyException("Too many files");
-        }
 
-        var category = await _categoryRepository
-            .GetAll()
-            .FirstOrDefaultAsync(c => c.PublicId == input.CategoryId);
-        if (category == null)
-        {
-            throw new EntityNotFoundException("Category not found");
-        }
+        var category = await _categoryRepository.FirstOrDefaultAsync(c => c.PublicId == input.CategoryId)
+            ?? throw new EntityNotFoundException("Category not found");
 
-        var subCategory = await _subCategoryRepository
-            .GetAll()
-            .FirstOrDefaultAsync(s => s.PublicId == input.SubCategoryId);
-        if (subCategory == null)
-        {
-            throw new EntityNotFoundException("SubCategory not found");
-        }
+        var subCategory = await _subCategoryRepository.FirstOrDefaultAsync(s => s.PublicId == input.SubCategoryId)
+            ?? throw new EntityNotFoundException("SubCategory not found");
 
-        var loc = await _locationAppService.ReverseGeocodeAsync(latitude: input.Latitude, longitude: input.Longitude);
+        var loc = await _locationAppService.ReverseGeocodeAsync(input.Latitude, input.Longitude);
 
         var report = new Report
         {
             CategoryId = category.Id,
             SubCategoryId = subCategory.Id,
-            UniqueId = $"HD-{Guid.NewGuid().ToString("N").Substring(0, 8)}",
+            UniqueId = $"HD-{Guid.NewGuid():N}".Substring(0, 8),
             Description = input.Description,
             Address = input.Address,
             Longitude = input.Longitude,
             Latitude = input.Latitude,
-            PhoneNumber = long.Parse(normalized),
-            Province = loc.Province,
-            City = loc.City,
+            PhoneNumber = phoneDigits,
+            Province = loc?.Province,
+            City = loc?.City,
             PersianCreationTime = PersianDateTimeHelper.ToCompactPersianNumber(Clock.Now),
-            Status = ReportStatus.Unreviewed,
-            IsReferred = false,
-            IsStarred = false,
-            IsArchived = false
+            Status = ReportStatus.Unreviewed
         };
 
         await _reportRepository.InsertAsync(report);
-        try
-        {
-            await CurrentUnitOfWork.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Error in SaveChangesAsync: " + ex.ToString());
-            throw;
-        }
+        await CurrentUnitOfWork.SaveChangesAsync();
 
-        if (input.FileTokens != null)
+        if (input.FileTokens != null && input.FileTokens.Count > 0)
         {
+            var uploads = new List<(string Name, Stream Stream, string ContentType)>();
+
             foreach (var token in input.FileTokens)
             {
                 var info = _tempFileCacheManager.GetFileInfo(token);
                 if (info == null)
-                {
                     continue;
-                }
-
-                //var binary = new BinaryObject(AbpSession.TenantId, info.File,
-                //    $"Report {report.Id} file {info.FileName}");
-                //await _binaryObjectManager.SaveAsync(binary);
 
                 if (info.File.Length > maxFileSize)
-                {
                     throw new UserFriendlyException("File too large");
-                }
 
                 var ext = Path.GetExtension(info.FileName);
                 var uniqueName = Guid.NewGuid().ToString("N") + ext;
-                //var savePath = Path.Combine(_appFolders.ReportFilesFolder, uniqueName);
+                var mime = info.FileType ?? "application/octet-stream";
 
-                //File.WriteAllBytes(savePath, info.File);
-                await _minioFileManager.UploadAsync(uniqueName, info.File);
+                uploads.Add((uniqueName, new MemoryStream(info.File), mime));
+
                 _tempFileCacheManager.ClearFile(token);
 
                 await _reportFileRepository.InsertAsync(new ReportFile
@@ -240,8 +213,14 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                     FilePath = uniqueName
                 });
             }
+
+            if (uploads.Count > 0)
+            {
+                await _minioFileManager.UploadManyAsync(uploads, compress: true);
+            }
         }
     }
+
     /// <summary>
     /// Retrieves reports for admins with paging, sorting and filtering.
     /// Reports are limited based on the admin role.
@@ -385,10 +364,18 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .Where(s => s.UserId == user.Id)
             .Select(s => s.ReportId);
         List<Guid> starredIds = null;
-        if (input.OnlyStarredByCurrentUser)
+        if (input.OnlyStarredByCurrentUser.HasValue)
         {
             starredIds = await starredIdsQuery.ToListAsync();
-            query = query.Where(r => starredIds.Contains(r.Id));
+            //query = query.Where(r => starredIds.Contains(r.Id));
+            if (input.OnlyStarredByCurrentUser.Value)
+            {
+                query = query.Where(r => starredIds.Contains(r.Id));
+            }
+            else
+            {
+                query = query.Where(r => !starredIds.Contains(r.Id));
+            }
         }
 
 

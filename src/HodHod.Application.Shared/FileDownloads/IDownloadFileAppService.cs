@@ -13,6 +13,7 @@ public interface IDownloadFileAppService : IApplicationService
     Task<FileDto> GetReportFile(Guid reportFileId);
     Task<FileDto> GetReportFileData(Guid reportFileId);
     Task<FileDto> GetReportFileSnapshot(Guid reportFileId);
+    Task<string> GetReportFilePresignedUrl(Guid reportFileId, int expirySeconds = 3600);
     Task<ReportFileCountsDto> GetReportFileCounts(Guid reportId);
     Task<List<Guid>> GetReportFileIds(Guid reportId);
 }
