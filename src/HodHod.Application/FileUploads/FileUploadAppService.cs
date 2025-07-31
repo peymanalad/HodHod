@@ -33,8 +33,8 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
     private static readonly HashSet<string> AllowedExtensions = new()
     {
         ".jpg", ".jpeg", ".png", ".webp", ".gif",
-        ".mp4", ".mov", ".avi", ".webm",
-        ".mp3", ".wav", ".ogg",
+        ".mp4", ".mov", ".avi",
+        ".mp3", ".wav", ".ogg",".webm",
         ".docx", ".txt"/*, ".pdf"*/
     };
 
@@ -81,9 +81,16 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
                 bytes = stream.GetAllBytes();
             }
 
-            var token = Guid.NewGuid().ToString("N");
-            _tempFileCacheManager.SetFile(token, new TempFileInfo(file.FileName, file.ContentType, bytes));
+            var contentType = file.ContentType;
+            if (ext == ".webm" && string.Equals(contentType, "video/webm", StringComparison.OrdinalIgnoreCase))
+            {
+                contentType = "audio/webm";
+            }
 
+
+            var token = Guid.NewGuid().ToString("N");
+            //_tempFileCacheManager.SetFile(token, new TempFileInfo(file.FileName, file.ContentType, bytes));
+            _tempFileCacheManager.SetFile(token, new TempFileInfo(file.FileName, contentType, bytes));
             outputs.Add(new FileUploads.Dto.UploadFileOutput
             {
                 Token = token,
@@ -100,6 +107,11 @@ public class FileUploadAppService : HodHodAppServiceBase, IFileUploadAppService
         if (!AllowedExtensions.Contains(ext))
         {
             throw new UserFriendlyException("نوع فایل نامعتبر است!");
+        }
+
+        if (ext == ".webm" && string.Equals(contentType, "video/webm", StringComparison.OrdinalIgnoreCase))
+        {
+            contentType = "audio/webm";
         }
 
         var uniqueName = Guid.NewGuid().ToString("N") + ext;
