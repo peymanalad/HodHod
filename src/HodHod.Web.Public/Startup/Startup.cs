@@ -53,6 +53,13 @@ public class Startup
         IdentityRegistrar.Register(services);
         services.AddSignalR();
 
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(_hostingEnvironment.ContentRootPath,
+                "App_Data", "DataProtectionKeys")))
+            .SetApplicationName("HodHod");
+
+
         if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
         {
             ConfigureHealthChecks(services);

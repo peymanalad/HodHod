@@ -795,6 +795,68 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
     }
 
+
+    [AbpAuthorize]
+    public async Task<List<ReportLocationDto>> GetReportLocationsAsync(GetReportLocationsInput input)
+    {
+        input.Normalize();
+        var (city, province) = await NormalizeLocationAsync(input.City, input.Province);
+
+        var query = _reportRepository.GetAllIncluding(r => r.Category, r => r.SubCategory);
+
+        if (input.CategoryId.HasValue)
+        {
+            query = query.Where(r => r.Category.PublicId == input.CategoryId.Value);
+        }
+
+        if (input.SubCategoryId.HasValue)
+        {
+            query = query.Where(r => r.SubCategory.PublicId == input.SubCategoryId.Value);
+        }
+
+        if (input.StartDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime >= input.StartDate.Value);
+        }
+
+        if (input.EndDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime <= input.EndDate.Value);
+        }
+
+        if (!string.IsNullOrEmpty(province))
+        {
+            query = query.Where(r => r.Province == province);
+        }
+
+        if (!string.IsNullOrEmpty(city))
+        {
+            query = query.Where(r => r.City == city);
+        }
+
+        if (input.StartClock.HasValue)
+        {
+            query = query.Where(r => (r.PersianCreationTime % 1000000) >= input.StartClock.Value);
+        }
+
+        if (input.EndClock.HasValue)
+        {
+            query = query.Where(r => (r.PersianCreationTime % 1000000) <= input.EndClock.Value);
+        }
+
+        return await query
+            .Select(r => new ReportLocationDto
+            {
+                Id = r.Id,
+                UniqueId = r.UniqueId,
+                Latitude = r.Latitude,
+                Longitude = r.Longitude
+            })
+            .ToListAsync();
+    }
+
+
+
     private async Task<(string city, string province)> NormalizeLocationAsync(string city, string province)
     {
         province = TrimPrefix(province);

@@ -47,6 +47,7 @@ using HodHod.Web.OpenIddict;
 using Abp.AspNetCore.OpenIddict;
 using HodHod.Authorization.QrLogin;
 using HodHod.Web.Reports;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace HodHod.Web.Startup;
@@ -82,6 +83,12 @@ public class Startup
 #endif
 
         services.AddSignalR();
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(_hostingEnvironment.ContentRootPath,
+                "App_Data", "DataProtectionKeys")))
+            .SetApplicationName("HodHod");
+
 
         services.AddCors(options =>
         {

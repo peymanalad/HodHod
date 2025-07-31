@@ -19,4 +19,5 @@ public interface IReportAppService : IApplicationService
     Task<List<CategoryReportPercentageDto>> GetReportDistributionByCategoryAsync();
     Task<List<FileCategoryReportPercentageDto>> GetReportDistributionByFileCategoryAsync();
     Task<List<SubCategoryReportCountDto>> GetReportCountBySubCategoryAsync();
+    Task<List<ReportLocationDto>> GetReportLocationsAsync(GetReportLocationsInput input);
 }
