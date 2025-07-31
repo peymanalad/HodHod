@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
@@ -16,4 +17,11 @@ public class ReportNote : FullAuditedEntity<Guid>
     [Required]
     [StringLength(2000)]
     public string Text { get; set; }
+
+    public ICollection<ReportNoteComment> Comments { get; set; }
+
+    public ReportNote()
+    {
+        Comments = new List<ReportNoteComment>();
+    }
 }

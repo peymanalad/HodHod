@@ -476,6 +476,27 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     }
 
     [AbpAuthorize]
+    public async Task RestoreReport(EntityDto<Guid> input)
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admin can restore reports.");
+        }
+
+        var report = await _reportRepository.FirstOrDefaultAsync(input.Id);
+        if (report == null)
+        {
+            throw new EntityNotFoundException("Report not found");
+        }
+
+        report.IsArchived = false;
+        report.ArchiveTime = null;
+        await _reportRepository.UpdateAsync(report);
+    }
+
+    [AbpAuthorize]
     public async Task StarReport(EntityDto<Guid> input)
     {
         var user = await GetCurrentUserAsync();

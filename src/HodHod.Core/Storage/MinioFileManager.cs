@@ -107,7 +107,23 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
             preparedStream = buffer;
         }
 
-        System.IO.Stream uploadStream = preparedStream;
+        //System.IO.Stream uploadStream = preparedStream;
+        var compressed = new MemoryStream();
+        using (var gzip = new GZipStream(compressed, CompressionLevel.Optimal, true))
+        {
+            preparedStream.Position = 0;
+            await preparedStream.CopyToAsync(gzip);
+        }
+        compressed.Position = 0;
+
+        System.IO.Stream uploadStream = compressed.Length < preparedStream.Length ? compressed : preparedStream;
+
+        //var headers = new Dictionary<string, string>();
+        //if (compressed.Length < preparedStream.Length)
+        //{
+        //    uploadStream = compressed;
+        //    headers["Content-Encoding"] = "gzip";
+        //}
 
         var args = new PutObjectArgs()
             .WithBucket(_bucket)
@@ -116,18 +132,25 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
             .WithStreamData(uploadStream)
             .WithObjectSize(uploadStream.Length);
 
+
+        //if (headers.Count > 0)
+        //{
+        //    args.WithHeaders(headers);
+        //}
+
         try
         {
             await _client.PutObjectAsync(args);
         }
-        catch (Exception e)
+        finally
         {
-            Console.WriteLine(e);
-            throw;
-        }
-        if (preparedStream != content)
-        {
-            await preparedStream.DisposeAsync();
+            if (preparedStream != content)
+                await preparedStream.DisposeAsync();
+
+            if (uploadStream == compressed)
+                await compressed.DisposeAsync();
+            else
+                compressed.Dispose();
         }
     }
 
@@ -177,6 +200,31 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
 
         await _client.GetObjectAsync(args.WithCallbackStream(stream => stream.CopyTo(ms)));
         ms.Position = 0;
+
+        var isGzip = false;
+        if (stat?.MetaData != null)
+        {
+            var encKey = stat.MetaData.Keys
+                .FirstOrDefault(k => string.Equals(k, "Content-Encoding", StringComparison.OrdinalIgnoreCase));
+            if (encKey != null &&
+                string.Equals(stat.MetaData[encKey], "gzip", StringComparison.OrdinalIgnoreCase))
+            {
+                isGzip = true;
+            }
+        }
+
+        if (isGzip && !offset.HasValue && !length.HasValue)
+        {
+            var decompressed = new MemoryStream();
+            using (var gzip = new GZipStream(ms, CompressionMode.Decompress, true))
+            {
+                await gzip.CopyToAsync(decompressed);
+            }
+            decompressed.Position = 0;
+            ms.Dispose();
+            return decompressed;
+        }
+
 
         return ms;
     }

@@ -72,7 +72,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
 
     public virtual DbSet<City> Cities { get; set; }
     public virtual DbSet<ReportNote> ReportNotes { get; set; }
-
+    public virtual DbSet<ReportNoteComment> ReportNoteComments { get; set; }
     public virtual DbSet<ReportStar> ReportStars { get; set; }
     public virtual DbSet<BlackListEntry> BlackListEntries { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
@@ -184,6 +184,10 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
             b.HasOne(n => n.Report)
                 .WithMany(r => r.Notes)
                 .HasForeignKey(n => n.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(n => n.Comments)
+                .WithOne(c => c.Note)
+                .HasForeignKey(c => c.NoteId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

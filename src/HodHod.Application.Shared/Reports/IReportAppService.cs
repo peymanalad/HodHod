@@ -14,6 +14,7 @@ public interface IReportAppService : IApplicationService
     Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input);
     Task ChangeReportStatus(ChangeReportStatusDto input);
     Task ArchiveReport(EntityDto<Guid> input);
+    Task RestoreReport(EntityDto<Guid> input);
     Task StarReport(EntityDto<Guid> input);
     Task UnstarReport(EntityDto<Guid> input);
     Task<List<ProvinceReportPercentageDto>> GetReportDistributionByProvinceAsync();

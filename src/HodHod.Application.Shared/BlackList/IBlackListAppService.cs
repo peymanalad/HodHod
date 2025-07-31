@@ -4,6 +4,7 @@ using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using HodHod.BlackLists.Dto;
 using HodHod.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HodHod.BlackLists;
 
@@ -15,4 +16,5 @@ public interface IBlackListAppService : IApplicationService
     Task<BlackListEntryDto> Update(UpdateBlackListEntryDto input);
     Task Delete(EntityDto<int> input);
     Task<FileDto> GetListToExcel();
+    Task<FileContentResult> DownloadListToExcel();
 }

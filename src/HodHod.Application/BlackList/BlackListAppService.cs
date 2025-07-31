@@ -11,17 +11,21 @@ using HodHod.Authorization;
 using HodHod.BlackLists.Dto;
 using HodHod.BlackLists.Exporting;
 using HodHod.Dto;
+using HodHod.Storage;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HodHod.BlackLists;
 
 [AbpAuthorize]
 public class BlackListAppService(
     IRepository<BlackListEntry, int> entryRepository,
-    IBlackListExcelExporter excelExporter)
+    IBlackListExcelExporter excelExporter,
+    ITempFileCacheManager tempFileCacheManager)
     : HodHodAppServiceBase, IBlackListAppService
 {
     private readonly IRepository<BlackListEntry, int> _entryRepository = entryRepository;
     private readonly IBlackListExcelExporter _excelExporter = excelExporter;
+    private readonly ITempFileCacheManager _tempFileCacheManager = tempFileCacheManager;
 
     public async Task<ListResultDto<BlackListEntryDto>> GetAll()
     {
@@ -121,5 +125,18 @@ public class BlackListAppService(
             Logger.Error("خطا در GetListToExcel: " + ex.Message, ex);
             throw;
         }
+    }
+
+    [HttpGet]
+    public async Task<FileContentResult> DownloadListToExcel()
+    {
+        var fileDto = await GetListToExcel();
+        var bytes = _tempFileCacheManager.GetFile(fileDto.FileToken);
+        _tempFileCacheManager.ClearFile(fileDto.FileToken);
+
+        return new FileContentResult(bytes, fileDto.FileType)
+        {
+            FileDownloadName = fileDto.FileName
+        };
     }
 }

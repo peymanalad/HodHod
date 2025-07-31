@@ -232,6 +232,11 @@ internal static class CustomDtoMapper
         configuration.CreateMap<ReportNote, ReportNoteDto>()
             .ForMember(d => d.CreatorUserName, opt => opt.Ignore());
 
+        configuration.CreateMap<CreateReportNoteCommentDto, ReportNoteComment>();
+        configuration.CreateMap<UpdateReportNoteCommentDto, ReportNoteComment>();
+        configuration.CreateMap<ReportNoteComment, ReportNoteCommentDto>()
+            .ForMember(d => d.CreatorUserName, opt => opt.Ignore());
+
         configuration.CreateMap<BlackListEntry, BlackListEntryDto>()
             .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(s => s.PhoneNumber.ToString()));
         configuration.CreateMap<CreateBlackListEntryDto, BlackListEntry>()
