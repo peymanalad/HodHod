@@ -202,6 +202,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 var uniqueName = Guid.NewGuid().ToString("N") + ext;
                 var mime = info.FileType ?? "application/octet-stream";
 
+                if (ext == ".webm")
+                {
+                    mime = "audio/webm";
+                }
+
                 uploads.Add((uniqueName, new MemoryStream(info.File), mime));
 
                 _tempFileCacheManager.ClearFile(token);
