@@ -22,6 +22,7 @@ public class GetReportsInput : PagedAndSortedInputDto, IShouldNormalize
     public ReportFileCategory? FileCategory { get; set; }
     public bool? OnlyStarredByCurrentUser { get; set; }
     public bool? HasNotes { get; set; }
+    public bool? IsArchived { get; set; }
 
     public void Normalize()
     {

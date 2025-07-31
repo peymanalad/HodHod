@@ -309,6 +309,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             query = query.Where(r => r.Status == input.Status.Value);
         }
 
+        if (input.IsArchived.HasValue)
+        {
+            query = query.Where(r => r.IsArchived == input.IsArchived.Value);
+        }
+
         if (input.StartPersianCreationTime.HasValue)
         {
             query = query.Where(r => r.PersianCreationTime >= input.StartPersianCreationTime.Value);
@@ -446,6 +451,27 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
 
         report.Status = input.Status;
+        await _reportRepository.UpdateAsync(report);
+    }
+
+    [AbpAuthorize]
+    public async Task ArchiveReport(EntityDto<Guid> input)
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admin can archive reports.");
+        }
+
+        var report = await _reportRepository.FirstOrDefaultAsync(input.Id);
+        if (report == null)
+        {
+            throw new EntityNotFoundException("Report not found");
+        }
+
+        report.IsArchived = true;
+        report.ArchiveTime = Clock.Now;
         await _reportRepository.UpdateAsync(report);
     }
 

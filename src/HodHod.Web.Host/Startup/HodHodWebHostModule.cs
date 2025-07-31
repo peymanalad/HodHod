@@ -23,6 +23,7 @@ using HodHod.Configuration;
 using HodHod.EntityFrameworkCore;
 using HodHod.MultiTenancy;
 using HodHod.MultiTenancy.Subscription;
+using HodHod.Reports;
 using HodHod.Web.Startup.ExternalLoginInfoProviders;
 
 namespace HodHod.Web.Startup;
@@ -87,6 +88,7 @@ public class HodHodWebHostModule : AbpModule
         }
 
         workManager.Add(IocManager.Resolve<PasswordExpirationBackgroundWorker>());
+        workManager.Add(IocManager.Resolve<ArchivedReportDeletionWorker>());
 
         ConfigureExternalAuthProviders();
     }

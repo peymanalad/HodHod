@@ -55,6 +55,7 @@ public class Report : FullAuditedEntity<Guid>
     public bool IsReferred { get; set; }
     public bool IsStarred { get; set; }
     public bool IsArchived { get; set; }
+    public DateTime? ArchiveTime { get; set; }
 
     public ICollection<ReportFile> Files { get; set; }
     public ICollection<ReportNote> Notes { get; set; }
