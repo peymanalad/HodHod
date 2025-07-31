@@ -9,7 +9,6 @@ public class WebmFileValidator : BaseFileValidator, ITransientDependency
 
     protected override HashSet<string> AllowedMimeTypes => new()
     {
-        "video/webm",
         "audio/webm"
     };
 
