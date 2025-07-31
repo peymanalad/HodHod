@@ -137,7 +137,13 @@ public class MinioFileManager : IMinioFileManager, ISingletonDependency
         //{
         //    args.WithHeaders(headers);
         //}
-
+        if (uploadStream == compressed)
+        {
+            args.WithHeaders(new Dictionary<string, string>
+            {
+                ["Content-Encoding"] = "gzip"
+            });
+        }
         try
         {
             await _client.PutObjectAsync(args);
