@@ -765,6 +765,68 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .ToList();
     }
 
+    [AbpAuthorize]
+    public async Task<List<CategoryWithSubCategoryReportCountDto>> GetReportCountByCategoryAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        IQueryable<Report> query = _reportRepository.GetAll();
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+            else
+            {
+                return new List<CategoryWithSubCategoryReportCountDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+            else
+            {
+                return new List<CategoryWithSubCategoryReportCountDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var counts = await query
+            .GroupBy(r => r.SubCategoryId)
+            .Select(g => new { SubCategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.SubCategoryId, g => g.Count);
+
+        var categories = await _categoryRepository.GetAllIncluding(c => c.SubCategories).ToListAsync();
+
+        return categories
+            .Select(c => new CategoryWithSubCategoryReportCountDto
+            {
+                CategoryId = c.PublicId,
+                CategoryName = c.Name,
+                SubCategories = c.SubCategories.Select(sc =>
+                {
+                    counts.TryGetValue(sc.Id, out var cnt);
+                    return new SubCategoryReportCountByCategoryDto()
+                    {
+                        SubCategoryId = sc.PublicId,
+                        SubCategoryName = sc.Name,
+                        Count = cnt
+                    };
+                }).ToList()
+            })
+            .ToList();
+    }
+
+
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
     {
@@ -796,6 +858,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     }
 
 
+
+
     [AbpAuthorize]
     public async Task<List<ReportLocationDto>> GetReportLocationsAsync(GetReportLocationsInput input)
     {
@@ -804,14 +868,14 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var query = _reportRepository.GetAllIncluding(r => r.Category, r => r.SubCategory);
 
-        if (input.CategoryId.HasValue)
+        if (input.CategoryIds != null && input.CategoryIds.Any())
         {
-            query = query.Where(r => r.Category.PublicId == input.CategoryId.Value);
+            query = query.Where(r => input.CategoryIds.Contains(r.Category.PublicId));
         }
 
-        if (input.SubCategoryId.HasValue)
+        if (input.SubCategoryIds != null && input.SubCategoryIds.Any())
         {
-            query = query.Where(r => r.SubCategory.PublicId == input.SubCategoryId.Value);
+            query = query.Where(r => input.SubCategoryIds.Contains(r.SubCategory.PublicId));
         }
 
         if (input.StartDate.HasValue)
@@ -850,7 +914,11 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 Id = r.Id,
                 UniqueId = r.UniqueId,
                 Latitude = r.Latitude,
-                Longitude = r.Longitude
+                Longitude = r.Longitude,
+                CategoryId = r.Category.PublicId,
+                CategoryName = r.Category.Name,
+                SubCategoryId = r.SubCategory.PublicId,
+                SubCategoryName = r.SubCategory.Name
             })
             .ToListAsync();
     }
