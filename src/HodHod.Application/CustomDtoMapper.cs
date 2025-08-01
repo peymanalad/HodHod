@@ -226,11 +226,17 @@ internal static class CustomDtoMapper
             .ForMember(d => d.SubCategoryId, opt => opt.Ignore());
         configuration.CreateMap<CreateReportNoteDto, ReportNote>();
         configuration.CreateMap<UpdateReportNoteDto, ReportNote>();
-        configuration.CreateMap<LocationResult, LocationResultDto>();
+        configuration.CreateMap<CreateReportReferralDto, ReportReferral>()
+            .ForMember(d => d.ToUserId, opt => opt.MapFrom(s => s.ReceiverUserId)); configuration.CreateMap<LocationResult, LocationResultDto>();
         configuration.CreateMap<Province, ProvinceDto>();
         configuration.CreateMap<City, CityDto>();
         configuration.CreateMap<ReportNote, ReportNoteDto>()
             .ForMember(d => d.CreatorUserName, opt => opt.Ignore());
+        configuration.CreateMap<ReportReferral, ReportReferralDto>()
+            .ForMember(d => d.SenderUserId, opt => opt.MapFrom(s => s.FromUserId))
+            .ForMember(d => d.ReceiverUserId, opt => opt.MapFrom(s => s.ToUserId))
+            .ForMember(d => d.SenderUserName, opt => opt.Ignore())
+            .ForMember(d => d.ReceiverUserName, opt => opt.Ignore());
 
         configuration.CreateMap<CreateReportNoteCommentDto, ReportNoteComment>();
         configuration.CreateMap<UpdateReportNoteCommentDto, ReportNoteComment>();

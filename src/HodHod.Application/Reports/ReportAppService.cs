@@ -24,7 +24,10 @@ using System.Linq.Dynamic.Core;
 
 using Task = System.Threading.Tasks.Task;
 using HodHod.BlackLists;
+using HodHod.Reports.Exporting;
 using Microsoft.AspNetCore.Http;
+using HodHod.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HodHod.Reports;
 
@@ -49,6 +52,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly ICacheManager _cacheManager;
     private readonly ILocationAppService _locationAppService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IReportListExcelExporter _reportListExcelExporter;
 
     public ReportAppService(
         IRepository<Report, Guid> reportRepository,
@@ -69,7 +73,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<ReportStar, Guid> reportStarRepository,
         IRepository<BlackListEntry, int> blackListRepository,
         IHttpContextAccessor httpContextAccessor,
-        IMinioFileManager minioFileManager)
+        IMinioFileManager minioFileManager,
+        IReportListExcelExporter reportListExcelExporter)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -89,6 +94,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _blackListRepository = blackListRepository;
         _httpContextAccessor = httpContextAccessor;
         _minioFileManager = minioFileManager;
+        _reportListExcelExporter = reportListExcelExporter;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -345,7 +351,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         {
             var imageExts = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff" };
             var videoExts = new[] { ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".3gp" };
-            var audioExts = new[] { ".webm",".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
+            var audioExts = new[] { ".webm", ".mp3", ".wav", ".ogg", ".m4a", ".flac", ".wma" };
             var docExts = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".odt", ".ods", ".odp" };
 
             switch (input.FileCategory.Value)
@@ -458,6 +464,33 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.Status = input.Status;
         await _reportRepository.UpdateAsync(report);
     }
+    [AbpAuthorize]
+    public async Task ChangeReportCategoryAsync(ChangeReportCategoryDto input)
+    {
+        var user = await GetCurrentUserAsync();
+        await EnsureReportAccessAsync(input.Id, user);
+
+        var report = await _reportRepository.FirstOrDefaultAsync(input.Id);
+        if (report == null)
+        {
+            throw new EntityNotFoundException("Report not found");
+        }
+
+        var category = await _categoryRepository.FirstOrDefaultAsync(c => c.PublicId == input.CategoryId)
+                       ?? throw new EntityNotFoundException("Category not found");
+
+        var subCategory = await _subCategoryRepository.FirstOrDefaultAsync(s => s.PublicId == input.SubCategoryId)
+                          ?? throw new EntityNotFoundException("SubCategory not found");
+
+        if (subCategory.CategoryId != category.Id)
+        {
+            throw new UserFriendlyException("SubCategory does not belong to specified Category");
+        }
+
+        report.CategoryId = category.Id;
+        report.SubCategoryId = subCategory.Id;
+        await _reportRepository.UpdateAsync(report);
+    }
 
     [AbpAuthorize]
     public async Task ArchiveReport(EntityDto<Guid> input)
@@ -499,6 +532,53 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.IsArchived = false;
         report.ArchiveTime = null;
         await _reportRepository.UpdateAsync(report);
+    }
+
+    [AbpAuthorize]
+    public async Task RestoreReports(List<Guid> reportIds)
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admin can restore reports.");
+        }
+
+        var reports = await _reportRepository.GetAll()
+            .Where(r => reportIds.Contains(r.Id) && r.IsArchived)
+            .ToListAsync();
+
+        foreach (var report in reports)
+        {
+            report.IsArchived = false;
+            report.ArchiveTime = null;
+        }
+
+        await CurrentUnitOfWork.SaveChangesAsync();
+    }
+
+    [AbpAuthorize]
+    public async Task DeleteReports(List<Guid> reportIds)
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin))
+        {
+            throw new AbpAuthorizationException("Only super admin can delete reports.");
+        }
+
+        var reports = await _reportRepository.GetAll()
+            .Where(r => reportIds.Contains(r.Id) && r.IsArchived)
+            .ToListAsync();
+
+        foreach (var report in reports)
+        {
+            report.IsDeleted = true;
+            report.DeletionTime = Clock.Now;
+            report.DeleterUserId = user.Id;
+        }
+
+        await CurrentUnitOfWork.SaveChangesAsync();
     }
 
     [AbpAuthorize]
@@ -581,6 +661,83 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 PercentageFormatted = FormatPercentage((double)d.Count * 100 / totalCount)
             })
             .ToList();
+    }
+
+
+
+    public async Task<List<ProvinceCityReportPercentageDto>> GetReportDistributionByProvinceAndCityAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.ProvinceAdmin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var query = _reportRepository.GetAll();
+
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<ProvinceCityReportPercentageDto>();
+        }
+
+        var provinceData = await query
+            .GroupBy(r => r.Province)
+            .Select(g => new { Province = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .ToListAsync();
+
+        var result = new List<ProvinceCityReportPercentageDto>();
+
+        foreach (var p in provinceData)
+        {
+            var provinceDto = new ProvinceCityReportPercentageDto
+            {
+                Province = p.Province,
+                TotalReports = p.Count,
+                Percentage = (double)p.Count * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)p.Count * 100 / totalCount),
+                Cities = new List<CityReportPercentageDto>()
+            };
+
+            var canSeeCities =
+                roles.Contains(StaticRoleNames.Host.SuperAdmin) ||
+                (roles.Contains(StaticRoleNames.Host.ProvinceAdmin) &&
+                 !string.IsNullOrEmpty(user.Province) &&
+                 user.Province == p.Province);
+
+            if (canSeeCities)
+            {
+                var cityData = await query
+                    .Where(r => r.Province == p.Province)
+                    .GroupBy(r => r.City)
+                    .Select(g => new { City = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+
+                foreach (var c in cityData)
+                {
+                    provinceDto.Cities.Add(new CityReportPercentageDto
+                    {
+                        City = c.City,
+                        TotalReports = c.Count,
+                        Percentage = (double)c.Count * 100 / p.Count,
+                        PercentageFormatted = FormatPercentage((double)c.Count * 100 / p.Count)
+                    });
+                }
+            }
+
+            result.Add(provinceDto);
+        }
+
+        return result;
     }
 
     [AbpAuthorize]
@@ -975,7 +1132,94 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .ToListAsync();
     }
 
+    [AbpAuthorize]
+    public async Task<List<TopReporterDto>> GetTopReportersAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
 
+        IQueryable<Report> query = _reportRepository.GetAll();
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+            else
+            {
+                return new List<TopReporterDto>();
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+            else
+            {
+                return new List<TopReporterDto>();
+            }
+        }
+        else if (!(roles.Contains(StaticRoleNames.Host.SuperAdmin) || roles.Contains(StaticRoleNames.Host.Admin)))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<TopReporterDto>();
+        }
+
+        var data = await query
+            .GroupBy(r => r.PhoneNumber)
+            .Select(g => new
+            {
+                PhoneNumber = g.Key,
+                City = g.OrderBy(r => r.CreationTime).Select(r => r.City).FirstOrDefault(),
+                Count = g.Count()
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(5)
+            .ToListAsync();
+
+        return data.Select(d => new TopReporterDto
+        {
+            PhoneNumber = d.PhoneNumber.ToString(),
+            CityName = d.City,
+            TotalReports = d.Count,
+            Percentage = (double)d.Count * 100 / totalCount
+        }).ToList();
+    }
+
+    public async Task<List<CityReportCountDto>> GetTopCitiesByReportCountAsync()
+    {
+        var query = _reportRepository.GetAll();
+        var totalCount = await query.CountAsync();
+        if (totalCount == 0)
+        {
+            return new List<CityReportCountDto>();
+        }
+
+        var data = await query
+            .GroupBy(r => r.City)
+            .Select(g => new { City = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(5)
+            .ToListAsync();
+
+        return data
+            .Select(d => new CityReportCountDto
+            {
+                CityName = d.City,
+                TotalReports = d.Count,
+                Percentage = (double)d.Count * 100 / totalCount,
+                PercentageFormatted = FormatPercentage((double)d.Count * 100 / totalCount)
+            })
+            .ToList();
+    }
 
     private async Task<(string city, string province)> NormalizeLocationAsync(string city, string province)
     {
@@ -1081,5 +1325,27 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             }
         }
     }
+
+    [AbpAuthorize]
+    public async Task<FileDto> GetReportsForAdminToExcelAsync(GetReportsInput input)
+    {
+        var result = await GetReportsForAdminAsync(input);
+        return await _reportListExcelExporter.ExportToFile(result.Items.ToList());
+    }
+
+    [AbpAuthorize]
+    [HttpGet]
+    public async Task<FileContentResult> DownloadReportsForAdminToExcel(GetReportsInput input)
+    {
+        var fileDto = await GetReportsForAdminToExcelAsync(input);
+        var bytes = _tempFileCacheManager.GetFile(fileDto.FileToken);
+        _tempFileCacheManager.ClearFile(fileDto.FileToken);
+
+        return new FileContentResult(bytes, fileDto.FileType)
+        {
+            FileDownloadName = fileDto.FileName
+        };
+    }
+
 
 }

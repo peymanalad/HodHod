@@ -73,6 +73,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<City> Cities { get; set; }
     public virtual DbSet<ReportNote> ReportNotes { get; set; }
     public virtual DbSet<ReportNoteComment> ReportNoteComments { get; set; }
+    public virtual DbSet<ReportReferral> ReportReferrals { get; set; }
     public virtual DbSet<ReportStar> ReportStars { get; set; }
     public virtual DbSet<BlackListEntry> BlackListEntries { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
@@ -190,6 +191,27 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
                 .HasForeignKey(c => c.NoteId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<HodHod.Reports.ReportReferral>(b =>
+        {
+            b.HasOne(r => r.Report)
+                .WithMany()
+                .HasForeignKey(r => r.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(r => r.FromUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(r => r.ToUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(r => r.Parent)
+                .WithMany(r => r.Replies)
+                .HasForeignKey(r => r.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
 
         modelBuilder.Entity<HodHod.Reports.ReportStar>(b =>
         {
