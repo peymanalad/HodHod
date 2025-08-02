@@ -16,4 +16,5 @@ public interface IDownloadFileAppService : IApplicationService
     Task<string> GetReportFilePresignedUrl(Guid reportFileId, int expirySeconds = 3600);
     Task<ReportFileCountsDto> GetReportFileCounts(Guid reportId);
     Task<List<Guid>> GetReportFileIds(Guid reportId);
+    Task<List<ReportFilePreviewDto>> GetReportFilePreviews(Guid reportId);
 }

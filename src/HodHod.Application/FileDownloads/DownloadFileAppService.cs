@@ -12,6 +12,11 @@ using Abp.MimeTypes;
 using HodHod.Reports;
 using HodHod.Reports.Dto;
 using Microsoft.EntityFrameworkCore;
+using FFMpegCore;
+using Minio.Exceptions;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing;
 
 namespace HodHod.FileDownloads;
 
@@ -311,6 +316,171 @@ public class DownloadFileAppService : HodHodAppServiceBase, IDownloadFileAppServ
         return result;
     }
 
+    public async Task<List<ReportFilePreviewDto>> GetReportFilePreviews(Guid reportId)
+    {
+        var files = await _reportFileRepository.GetAll()
+            .Where(f => f.ReportId == reportId)
+            .ToListAsync();
+
+        var result = new List<ReportFilePreviewDto>();
+
+        foreach (var file in files)
+        {
+            var mimeType = _mimeTypeMap.GetMimeType(file.FileName);
+            string fileType;
+            if (mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                fileType = "image";
+            }
+            else if (mimeType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            {
+                fileType = "video";
+            }
+            else if (mimeType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+            {
+                fileType = "audio";
+            }
+            else
+            {
+                fileType = "document";
+            }
+
+            var originalUrl = await _minioFileManager.GetPresignedGetUrlAsync(file.FilePath, 3600);
+            string previewUrl = null;
+
+            if (fileType == "image" || fileType == "video")
+            {
+                var previewObject = fileType == "image"
+                    ? $"thumbnails/{file.ReportId}/{Path.ChangeExtension(file.FileName, "jpg")}" :
+                    $"previews/{file.ReportId}/{Path.ChangeExtension(file.FileName, "jpg")}";
+
+                var exists = true;
+                try
+                {
+                    await _minioFileManager.ProcessStreamAsync(previewObject, _ => Task.CompletedTask, 0, 1);
+                }
+                catch (MinioException)
+                {
+                    exists = false;
+                }
+
+                if (!exists)
+                {
+                    if (fileType == "image")
+                    {
+                        await using var stream = await _minioFileManager.DownloadStreamAsync(file.FilePath);
+                        using var image = Image.FromStream(stream);
+                        const int max = 200;
+                        var width = image.Width;
+                        var height = image.Height;
+                        if (width > height)
+                        {
+                            if (width > max)
+                            {
+                                height = height * max / width;
+                                width = max;
+                            }
+                        }
+                        else
+                        {
+                            if (height > max)
+                            {
+                                width = width * max / height;
+                                height = max;
+                            }
+                        }
+
+                        using var thumbnail = new Bitmap(width, height);
+                        using (var g = System.Drawing.Graphics.FromImage(thumbnail))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.DrawImage(image, 0, 0, width, height);
+                        }
+
+                        using var ms = new MemoryStream();
+                        thumbnail.Save(ms, ImageFormat.Jpeg);
+                        ms.Position = 0;
+                        await _minioFileManager.UploadStreamAsync(previewObject, ms, MimeTypeNames.ImageJpeg);
+                    }
+                    else if (fileType == "video")
+                    {
+                        var tempInput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}_{file.FileName}");
+                        await using (var original = await _minioFileManager.DownloadStreamAsync(file.FilePath))
+                        await using (var fs = File.Create(tempInput))
+                        {
+                            await original.CopyToAsync(fs);
+                        }
+
+                        var tempOutput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
+                        try
+                        {
+                            var success = await FFMpeg.SnapshotAsync(tempInput, tempOutput, null, TimeSpan.FromSeconds(1));
+                            if (!success || !File.Exists(tempOutput))
+                                throw new Exception("Snapshot creation failed.");
+
+                            using var image = Image.FromFile(tempOutput);
+                            const int max = 200;
+                            var width = image.Width;
+                            var height = image.Height;
+                            if (width > height)
+                            {
+                                if (width > max)
+                                {
+                                    height = height * max / width;
+                                    width = max;
+                                }
+                            }
+                            else
+                            {
+                                if (height > max)
+                                {
+                                    width = width * max / height;
+                                    height = max;
+                                }
+                            }
+
+                            using var thumbnail = new Bitmap(width, height);
+                            using (var g = System.Drawing.Graphics.FromImage(thumbnail))
+                            {
+                                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                                g.DrawImage(image, 0, 0, width, height);
+                            }
+
+                            using var ms = new MemoryStream();
+                            thumbnail.Save(ms, ImageFormat.Jpeg);
+                            ms.Position = 0;
+                            await _minioFileManager.UploadStreamAsync(previewObject, ms, MimeTypeNames.ImageJpeg);
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                if (File.Exists(tempInput)) File.Delete(tempInput);
+                            }
+                            catch { }
+                            try
+                            {
+                                if (File.Exists(tempOutput)) File.Delete(tempOutput);
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                previewUrl = await _minioFileManager.GetPresignedGetUrlAsync(previewObject, 3600);
+            }
+
+            result.Add(new ReportFilePreviewDto
+            {
+                FileName = file.FileName,
+                FileType = fileType,
+                OriginalUrl = originalUrl,
+                PreviewUrl = previewUrl
+            });
+        }
+
+        return result;
+    }
 
     public async Task<ReportFileCountsDto> GetReportFileCounts(Guid reportId)
     {
