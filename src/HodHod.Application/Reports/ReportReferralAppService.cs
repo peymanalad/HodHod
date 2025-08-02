@@ -54,7 +54,7 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
         {
             await _appNotifier.SendMessageAsync(
                 AppNotificationNames.ReportReferral,
-                $"Report {input.ReportId} was referred to you",
+                $"گزارش {input.UniqueId} به شما ارجاع داده شد.",
                 new[] { receiver.ToUserIdentifier() });
         }
 

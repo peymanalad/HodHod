@@ -7,6 +7,8 @@ public class CreateReportReferralDto
 {
     [Required]
     public Guid ReportId { get; set; }
+    [Required]
+    public string UniqueId { get; set; }
 
     [Required]
     public long ReceiverUserId { get; set; }
