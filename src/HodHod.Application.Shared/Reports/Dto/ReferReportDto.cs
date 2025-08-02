@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HodHod.Reports.Dto
+namespace HodHod.Reports.Dto;
+
+public class ReferReportDto
 {
-    internal class ReferReportDto
-    {
-    }
+    public Guid ReportId { get; set; }
+    public long TargetUserId { get; set; }
 }

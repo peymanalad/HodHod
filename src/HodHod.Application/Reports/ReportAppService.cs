@@ -232,10 +232,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
     }
 
-    /// <summary>
-    /// Retrieves reports for admins with paging, sorting and filtering.
-    /// Reports are limited based on the admin role.
-    /// </summary>
     [AbpAuthorize]
     public async Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input)
     {
@@ -448,6 +444,95 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         }
         return new PagedResultDto<ReportDto>(totalCount, dto);
     }
+
+    [AbpAuthorize]
+    public async Task<List<ReportMapPointDto>> GetReportMapPointsForAdminAsync(GetReportMapPointsInput input)
+    {
+        var user = await GetCurrentUserAsync();
+        var roles = await UserManager.GetRolesAsync(user);
+
+        if (!roles.Contains(StaticRoleNames.Host.SuperAdmin) &&
+            !roles.Contains(StaticRoleNames.Host.ProvinceAdmin) &&
+            !roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            throw new AbpAuthorizationException("Not authorized to view reports.");
+        }
+
+        var query = _reportRepository.GetAll().AsNoTracking();
+
+        if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.City))
+            {
+                query = query.Where(r => r.City == user.City);
+            }
+        }
+        else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+        {
+            if (!string.IsNullOrEmpty(user.Province))
+            {
+                query = query.Where(r => r.Province == user.Province);
+            }
+        }
+
+        if (input.CategoryId.HasValue)
+        {
+            query = query.Where(r => r.Category.PublicId == input.CategoryId.Value);
+        }
+
+        if (input.SubCategoryId.HasValue)
+        {
+            query = query.Where(r => r.SubCategory.PublicId == input.SubCategoryId.Value);
+        }
+
+        if (input.StartDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime >= input.StartDate.Value);
+        }
+
+        if (input.EndDate.HasValue)
+        {
+            query = query.Where(r => r.CreationTime <= input.EndDate.Value);
+        }
+
+        if (!string.IsNullOrEmpty(input.Province))
+        {
+            query = query.Where(r => r.Province == input.Province);
+        }
+
+        if (!string.IsNullOrEmpty(input.City))
+        {
+            query = query.Where(r => r.City == input.City);
+        }
+
+        if (input.StartPersianCreationClock.HasValue)
+        {
+            var startClock = input.StartPersianCreationClock.Value;
+            query = query.Where(r => (r.PersianCreationTime % 1000000) >= startClock);
+        }
+
+        if (input.EndPersianCreationClock.HasValue)
+        {
+            var endClock = input.EndPersianCreationClock.Value;
+            query = query.Where(r => (r.PersianCreationTime % 1000000) <= endClock);
+        }
+
+        query = query.Where(r => r.Longitude.HasValue && r.Latitude.HasValue);
+
+        return await query
+            .Select(r => new ReportMapPointDto
+            {
+                UniqueId = r.Id,
+                CategoryId = r.Category.PublicId,
+                SubCategoryId = r.SubCategory.PublicId,
+                CategoryName = r.Category.Name,
+                SubCategoryName = r.SubCategory.Name,
+                Longitude = r.Longitude.Value,
+                Latitude = r.Latitude.Value
+            })
+            .ToListAsync();
+    }
+
 
     [AbpAuthorize]
     public async Task ChangeReportStatus(ChangeReportStatusDto input)
