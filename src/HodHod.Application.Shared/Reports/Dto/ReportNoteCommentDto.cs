@@ -8,6 +8,7 @@ public class ReportNoteCommentDto
     public Guid NoteId { get; set; }
     public long? CreatorUserId { get; set; }
     public string CreatorFullName { get; set; }
+    public string CreatorRoleName { get; set; }
     public DateTime CreationTime { get; set; }
     public string Text { get; set; }
 }

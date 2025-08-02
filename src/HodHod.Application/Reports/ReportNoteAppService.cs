@@ -43,21 +43,31 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
             .Distinct()
             .ToList();
 
-        var userDict = new Dictionary<long, string>();
+        var userNameDict = new Dictionary<long, string>();
+        var userRoleDict = new Dictionary<long, string>();
         foreach (var id in userIds)
         {
             var u = await UserManager.FindByIdAsync(id.ToString());
             if (u != null)
             {
-                userDict[id] = u.UserName;
+                userNameDict[id] = u.UserName;
+                var roles = await UserManager.GetRolesAsync(u);
+                userRoleDict[id] = roles.FirstOrDefault();
             }
         }
 
         foreach (var n in dto)
         {
-            if (n.CreatorUserId.HasValue && userDict.TryGetValue(n.CreatorUserId.Value, out var name))
+            if (n.CreatorUserId.HasValue)
             {
-                n.CreatorFullName = name;
+                if (userNameDict.TryGetValue(n.CreatorUserId.Value, out var name))
+                {
+                    n.CreatorFullName = name;
+                }
+                if (userRoleDict.TryGetValue(n.CreatorUserId.Value, out var role))
+                {
+                    n.CreatorRoleName = role;
+                }
             }
         }
 
@@ -77,6 +87,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = user.Id;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
+        dto.CreatorRoleName = (await UserManager.GetRolesAsync(user)).FirstOrDefault();
         dto.CreationTime = entity.CreationTime;
         return dto;
     }
@@ -103,6 +114,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
+        dto.CreatorRoleName = (await UserManager.GetRolesAsync(user)).FirstOrDefault();
         return dto;
     }
 
