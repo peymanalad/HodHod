@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp;
 using Abp.Authorization;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using HodHod.Authorization;
 using HodHod.Authorization.Roles;
 using HodHod.Authorization.Users;
+using HodHod.Notifications;
 using HodHod.Reports.Dto;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,11 +20,16 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
 {
     private readonly IRepository<ReportReferral, Guid> _referralRepository;
     private readonly IRepository<Report, Guid> _reportRepository;
+    private readonly IAppNotifier _appNotifier;
 
-    public ReportReferralAppService(IRepository<ReportReferral, Guid> referralRepository, IRepository<Report, Guid> reportRepository)
+    public ReportReferralAppService(
+        IRepository<ReportReferral, Guid> referralRepository,
+        IRepository<Report, Guid> reportRepository,
+        IAppNotifier appNotifier)
     {
         _referralRepository = referralRepository;
         _reportRepository = reportRepository;
+        _appNotifier = appNotifier;
     }
 
     public async Task<ReportReferralDto> CreateAsync(CreateReportReferralDto input)
@@ -38,10 +45,18 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
 
         var dto = ObjectMapper.Map<ReportReferralDto>(entity);
         dto.SenderUserId = user.Id;
-        dto.SenderUserName = user.UserName;
+        dto.SenderFullName = $"{user.Name} {user.Surname}";
 
         var receiver = await UserManager.FindByIdAsync(input.ReceiverUserId.ToString());
-        dto.ReceiverUserName = receiver?.UserName;
+        dto.ReceiverFullName = receiver != null ? $"{receiver.Name} {receiver.Surname}" : null;
+
+        if (receiver != null)
+        {
+            await _appNotifier.SendMessageAsync(
+                AppNotificationNames.ReportReferral,
+                $"Report {input.ReportId} was referred to you",
+                new[] { receiver.ToUserIdentifier() });
+        }
 
         return dto;
     }
@@ -83,7 +98,7 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
             var u = await UserManager.FindByIdAsync(id.ToString());
             if (u != null)
             {
-                dict[id] = u.UserName;
+                dict[id] = $"{u.Name} {u.Surname}";
             }
         }
 
@@ -91,11 +106,11 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
         {
             if (dict.TryGetValue(r.SenderUserId, out var s))
             {
-                r.SenderUserName = s;
+                r.SenderFullName = s;
             }
             if (dict.TryGetValue(r.ReceiverUserId, out var t))
             {
-                r.ReceiverUserName = t;
+                r.ReceiverFullName = t;
             }
         }
 
@@ -130,34 +145,34 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
         if (roles.Contains(StaticRoleNames.Host.SuperAdmin))
         {
             result.Peers = superAdmins.Where(u => u.Id != user.Id)
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
 
             result.Subordinates.AddRange(
                 provinceAdmins.Where(u => u.Province == report.Province)
-                    .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }));
+                    .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }));
 
             result.Subordinates.AddRange(
                 cityAdmins.Where(u => u.Province == report.Province)
-                    .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }));
+                    .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }));
         }
         else if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
         {
             result.Superiors = superAdmins
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
 
             result.Peers = provinceAdmins.Where(u => u.Id != user.Id)
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
 
             result.Subordinates = cityAdmins.Where(u => u.Province == user.Province)
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
         }
         else if (roles.Contains(StaticRoleNames.Host.CityAdmin))
         {
             result.Superiors = provinceAdmins.Where(u => u.Province == user.Province)
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
 
             result.Peers = cityAdmins.Where(u => u.Id != user.Id && u.Province == user.Province)
-                .Select(u => new SimpleUserDto { Id = u.Id, UserName = u.UserName }).ToList();
+                .Select(u => new SimpleUserDto { Id = u.Id, FullName = $"{u.Name} {u.Surname}" }).ToList();
         }
 
         return result;

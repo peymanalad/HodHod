@@ -60,7 +60,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
             var u = await UserManager.FindByIdAsync(id.ToString());
             if (u != null)
             {
-                userDict[id] = u.UserName;
+                userDict[id] = $"{u.Name} {u.Surname}";
             }
         }
 
@@ -68,7 +68,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         {
             if (c.CreatorUserId.HasValue && userDict.TryGetValue(c.CreatorUserId.Value, out var name))
             {
-                c.CreatorUserName = name;
+                c.CreatorFullName = name;
             }
         }
 
@@ -93,7 +93,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
 
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = user.Id;
-        dto.CreatorUserName = user.UserName;
+        dto.CreatorFullName = $"{user.Name} {user.Surname}";
         dto.CreationTime = entity.CreationTime;
         return dto;
     }
@@ -125,7 +125,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
 
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
-        dto.CreatorUserName = user.UserName;
+        dto.CreatorFullName = $"{user.Name} {user.Surname}";
         return dto;
     }
 

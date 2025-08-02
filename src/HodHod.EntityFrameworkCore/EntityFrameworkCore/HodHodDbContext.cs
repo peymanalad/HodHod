@@ -213,6 +213,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
         });
 
 
+
         modelBuilder.Entity<HodHod.Reports.ReportStar>(b =>
         {
             b.HasIndex(s => new { s.ReportId, s.UserId }).IsUnique();
