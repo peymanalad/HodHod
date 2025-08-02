@@ -590,7 +590,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         return await query
             .Select(r => new ReportMapPointDto
             {
-                UniqueId = r.Id,
+                UniqueId = r.UniqueId,
                 CategoryId = r.Category.PublicId,
                 SubCategoryId = r.SubCategory.PublicId,
                 CategoryName = r.Category.Name,
