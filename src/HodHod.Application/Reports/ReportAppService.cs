@@ -473,12 +473,17 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .Distinct()
             .ToList();
 
-        var reporterNames = await UserManager.Users
-            .Where(u => reporterIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Name, u.Surname })
-            .ToListAsync();
-
-        var reporterDict = reporterNames.ToDictionary(u => u.Id, u => $"{u.Name} {u.Surname}");
+        var reporterNameDict = new Dictionary<long, string>();
+        foreach (var id in reporterIds)
+        {
+            var u = await UserManager.FindByIdAsync(id.ToString());
+            if (u != null)
+            {
+                reporterNameDict[id] = !string.IsNullOrWhiteSpace(u.FullName)
+                    ? u.FullName
+                    : u.UserName;
+            }
+        }
 
         var reportDict = reports.ToDictionary(r => r.Id);
 
@@ -488,7 +493,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             var entity = reportDict[r.Id];
             var lastNote = entity.Notes.OrderByDescending(n => n.CreationTime).FirstOrDefault();
 
-            var reporterName = entity.CreatorUserId.HasValue && reporterDict.TryGetValue(entity.CreatorUserId.Value, out var name)
+            var reporterName = entity.CreatorUserId.HasValue &&
+                               reporterNameDict.TryGetValue(entity.CreatorUserId.Value, out var name)
                 ? name
                 : null;
 
@@ -511,6 +517,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         return new PagedResultDto<ReportWithLastNoteDto>(baseResult.TotalCount, dtoList);
     }
+
 
 
     [AbpAuthorize]
