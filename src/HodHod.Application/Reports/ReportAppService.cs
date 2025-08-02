@@ -446,6 +446,71 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     }
 
     [AbpAuthorize]
+    public async Task<PagedResultDto<ReportWithLastNoteDto>> GetReportsWithLastNoteForAdminAsync(GetReportsInput input)
+    {
+        input.HasNotes = true;
+        input.IsArchived = false;
+
+        var baseResult = await GetReportsForAdminAsync(input);
+        if (!baseResult.Items.Any())
+        {
+            return new PagedResultDto<ReportWithLastNoteDto>(baseResult.TotalCount, new List<ReportWithLastNoteDto>());
+        }
+
+        var reportIds = baseResult.Items.Select(r => r.Id).ToList();
+
+        var reports = await _reportRepository.GetAll()
+            .Where(r => reportIds.Contains(r.Id))
+            .Include(r => r.Notes)
+            .ToListAsync();
+
+        var reporterIds = reports
+            .Where(r => r.CreatorUserId.HasValue)
+            .Select(r => r.CreatorUserId.Value)
+            .Distinct()
+            .ToList();
+
+        var reporterNames = await UserManager.Users
+            .Where(u => reporterIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name, u.Surname })
+            .ToListAsync();
+
+        var reporterDict = reporterNames.ToDictionary(u => u.Id, u => $"{u.Name} {u.Surname}");
+
+        var reportDict = reports.ToDictionary(r => r.Id);
+
+        var dtoList = new List<ReportWithLastNoteDto>();
+        foreach (var r in baseResult.Items)
+        {
+            var entity = reportDict[r.Id];
+            var lastNote = entity.Notes.OrderByDescending(n => n.CreationTime).FirstOrDefault();
+
+            var reporterName = entity.CreatorUserId.HasValue && reporterDict.TryGetValue(entity.CreatorUserId.Value, out var name)
+                ? name
+                : null;
+
+            dtoList.Add(new ReportWithLastNoteDto
+            {
+                Id = r.Id,
+                UniqueId = r.UniqueId,
+                CategoryId = r.CategoryId,
+                CategoryName = r.CategoryName,
+                SubCategoryId = r.SubCategoryId,
+                SubCategoryName = r.SubCategoryName,
+                LastNoteText = lastNote?.Text,
+                LastNoteCreationTime = lastNote?.CreationTime,
+                LastNoteAuthorId = lastNote?.CreatorUserId,
+                ReporterFullName = reporterName,
+                NoteCount = r.NoteCount,
+                Status = r.Status
+            });
+        }
+
+        return new PagedResultDto<ReportWithLastNoteDto>(baseResult.TotalCount, dtoList);
+    }
+
+
+    [AbpAuthorize]
     public async Task<List<ReportMapPointDto>> GetReportMapPointsForAdminAsync(GetReportMapPointsInput input)
     {
         var user = await GetCurrentUserAsync();

@@ -14,6 +14,7 @@ public interface IReportAppService : IApplicationService
     Task SendReportOtpAsync(SendReportOtpInput input);
     Task SubmitReport(CreateReportDto input);
     Task<PagedResultDto<ReportDto>> GetReportsForAdminAsync(GetReportsInput input);
+    Task<PagedResultDto<ReportWithLastNoteDto>> GetReportsWithLastNoteForAdminAsync(GetReportsInput input);
     Task<List<ReportMapPointDto>> GetReportMapPointsForAdminAsync(GetReportMapPointsInput input);
     Task ChangeReportStatus(ChangeReportStatusDto input);
     Task ChangeReportCategoryAsync(ChangeReportCategoryDto input);
