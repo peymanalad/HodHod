@@ -53,6 +53,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
     private readonly ILocationAppService _locationAppService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IReportListExcelExporter _reportListExcelExporter;
+    private readonly IReportHistoryManager _historyManager;
 
     public ReportAppService(
         IRepository<Report, Guid> reportRepository,
@@ -74,7 +75,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         IRepository<BlackListEntry, int> blackListRepository,
         IHttpContextAccessor httpContextAccessor,
         IMinioFileManager minioFileManager,
-        IReportListExcelExporter reportListExcelExporter)
+        IReportListExcelExporter reportListExcelExporter,
+        IReportHistoryManager historyManager)
     {
         _reportRepository = reportRepository;
         _reportFileRepository = reportFileRepository;
@@ -95,6 +97,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         _httpContextAccessor = httpContextAccessor;
         _minioFileManager = minioFileManager;
         _reportListExcelExporter = reportListExcelExporter;
+        _historyManager = historyManager;
     }
     public async Task SendReportOtpAsync(SendReportOtpInput input)
     {
@@ -613,6 +616,16 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         report.Status = input.Status;
         await _reportRepository.UpdateAsync(report);
+
+        var statusDetail = input.Status switch
+        {
+            ReportStatus.Approved => "Approved",
+            ReportStatus.Rejected => "Rejected",
+            _ => input.Status.ToString()
+        };
+
+        await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportStatusChange,
+            statusDetail, ReportHistoryVisibility.All);
     }
     [AbpAuthorize]
     public async Task ChangeReportCategoryAsync(ChangeReportCategoryDto input)
@@ -637,9 +650,32 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             throw new UserFriendlyException("SubCategory does not belong to specified Category");
         }
 
+        var oldCategory = await _categoryRepository.FirstOrDefaultAsync(report.CategoryId);
+        var oldSubCategory = await _subCategoryRepository.FirstOrDefaultAsync(report.SubCategoryId);
+
         report.CategoryId = category.Id;
         report.SubCategoryId = subCategory.Id;
         await _reportRepository.UpdateAsync(report);
+
+
+        var changes = new List<string>();
+        if (oldCategory?.Id != category.Id)
+        {
+            var oldName = oldCategory?.Name ?? "";
+            changes.Add($"Category: {oldName} -> {category.Name}");
+        }
+        if (oldSubCategory?.Id != subCategory.Id)
+        {
+            var oldName = oldSubCategory?.Name ?? "";
+            changes.Add($"SubCategory: {oldName} -> {subCategory.Name}");
+        }
+
+        if (changes.Count > 0)
+        {
+            var details = string.Join("; ", changes);
+            await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ChangeReportCategory,
+                details, ReportHistoryVisibility.All);
+        }
     }
 
     [AbpAuthorize]
@@ -661,6 +697,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.IsArchived = true;
         report.ArchiveTime = Clock.Now;
         await _reportRepository.UpdateAsync(report);
+        await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddToArchive,
+            null, ReportHistoryVisibility.All);
     }
 
     [AbpAuthorize]
@@ -682,6 +720,8 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.IsArchived = false;
         report.ArchiveTime = null;
         await _reportRepository.UpdateAsync(report);
+        await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.RestoreReport,
+            null, ReportHistoryVisibility.All);
     }
 
     [AbpAuthorize]
@@ -702,9 +742,12 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         {
             report.IsArchived = false;
             report.ArchiveTime = null;
+            await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.RestoreReport,
+                null, ReportHistoryVisibility.All);
         }
 
         await CurrentUnitOfWork.SaveChangesAsync();
+
     }
 
     [AbpAuthorize]
@@ -741,6 +784,21 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         if (exists == null)
         {
             await _reportStarRepository.InsertAsync(new ReportStar { ReportId = input.Id, UserId = user.Id });
+
+            var roles = await UserManager.GetRolesAsync(user);
+            var visibility = ReportHistoryVisibility.PerformedUser;
+            if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+            {
+                visibility |= ReportHistoryVisibility.SuperAdmin;
+            }
+            else if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+            {
+                visibility |= ReportHistoryVisibility.SuperAdmin | ReportHistoryVisibility.ProvinceAdmin;
+            }
+
+            await _historyManager.LogAsync(input.Id, user.Id, $"{user.Name} {user.Surname}",
+                ReportActionType.ChangeIsStarredByCurrentUser,
+                "Starred", visibility);
         }
     }
 
@@ -754,7 +812,20 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         if (star != null)
         {
             await _reportStarRepository.DeleteAsync(star);
+            var roles = await UserManager.GetRolesAsync(user);
+            var visibility = ReportHistoryVisibility.PerformedUser;
+            if (roles.Contains(StaticRoleNames.Host.ProvinceAdmin))
+            {
+                visibility |= ReportHistoryVisibility.SuperAdmin;
+            }
+            else if (roles.Contains(StaticRoleNames.Host.CityAdmin))
+            {
+                visibility |= ReportHistoryVisibility.SuperAdmin | ReportHistoryVisibility.ProvinceAdmin;
+            }
+            await _historyManager.LogAsync(input.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ChangeIsStarredByCurrentUser,
+                "Unstarred", visibility);
         }
+
     }
 
     [AbpAuthorize]
@@ -812,8 +883,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             })
             .ToList();
     }
-
-
 
     public async Task<List<ProvinceCityReportPercentageDto>> GetReportDistributionByProvinceAndCityAsync()
     {
@@ -1185,8 +1254,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .ToList();
     }
 
-
-
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
     {
         var roles = await UserManager.GetRolesAsync(user);
@@ -1215,8 +1282,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             }
         }
     }
-
-
 
 
     [AbpAuthorize]

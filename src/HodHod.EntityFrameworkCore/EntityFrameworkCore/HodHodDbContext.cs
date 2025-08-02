@@ -76,6 +76,7 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
     public virtual DbSet<ReportReferral> ReportReferrals { get; set; }
     public virtual DbSet<ReportStar> ReportStars { get; set; }
     public virtual DbSet<BlackListEntry> BlackListEntries { get; set; }
+    public virtual DbSet<ReportHistoryLog> ReportHistoryLogs { get; set; }
     public HodHodDbContext(DbContextOptions<HodHodDbContext> options)
         : base(options)
     {
@@ -221,6 +222,11 @@ public class HodHodDbContext : AbpZeroDbContext<Tenant, Role, User, HodHodDbCont
                 .WithMany()
                 .HasForeignKey(s => s.ReportId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReportHistoryLog>(b =>
+        {
+            b.HasIndex(l => l.ReportId);
         });
 
         modelBuilder.Entity<BlackListEntry>(b =>

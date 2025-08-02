@@ -21,15 +21,18 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
     private readonly IRepository<ReportReferral, Guid> _referralRepository;
     private readonly IRepository<Report, Guid> _reportRepository;
     private readonly IAppNotifier _appNotifier;
+    private readonly IReportHistoryManager _historyManager;
 
     public ReportReferralAppService(
         IRepository<ReportReferral, Guid> referralRepository,
         IRepository<Report, Guid> reportRepository,
-        IAppNotifier appNotifier)
+        IAppNotifier appNotifier,
+        IReportHistoryManager historyManager)
     {
         _referralRepository = referralRepository;
         _reportRepository = reportRepository;
         _appNotifier = appNotifier;
+        _historyManager = historyManager;
     }
 
     public async Task<ReportReferralDto> CreateAsync(CreateReportReferralDto input)
@@ -57,6 +60,10 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
                 $"گزارش {input.UniqueId} به شما ارجاع داده شد.",
                 new[] { receiver.ToUserIdentifier() });
         }
+
+        await _historyManager.LogAsync(input.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportReferral,
+            $"ارجاع شد به {dto.ReceiverFullName ?? input.ReceiverUserId.ToString()}", ReportHistoryVisibility.All);
+
 
         return dto;
     }

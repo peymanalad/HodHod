@@ -19,15 +19,18 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
     private readonly IRepository<ReportNoteComment, Guid> _commentRepository;
     private readonly IRepository<ReportNote, Guid> _noteRepository;
     private readonly IRepository<Report, Guid> _reportRepository;
+    private readonly IReportHistoryManager _historyManager;
 
     public ReportNoteCommentAppService(
         IRepository<ReportNoteComment, Guid> commentRepository,
         IRepository<ReportNote, Guid> noteRepository,
-        IRepository<Report, Guid> reportRepository)
+        IRepository<Report, Guid> reportRepository,
+        IReportHistoryManager historyManager)
     {
         _commentRepository = commentRepository;
         _noteRepository = noteRepository;
         _reportRepository = reportRepository;
+        _historyManager = historyManager;
     }
 
     public async Task<List<ReportNoteCommentDto>> GetComments(Guid noteId)
@@ -101,6 +104,8 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         await _commentRepository.InsertAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddComment, input.Text, ReportHistoryVisibility.All);
+
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = user.Id;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
@@ -134,6 +139,8 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         await _commentRepository.UpdateAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditComment, input.Text, ReportHistoryVisibility.All);
+
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
@@ -163,6 +170,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         }
 
         await _commentRepository.DeleteAsync(entity);
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteComment, null, ReportHistoryVisibility.All);
     }
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)

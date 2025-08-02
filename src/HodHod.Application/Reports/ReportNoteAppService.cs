@@ -18,11 +18,14 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
 {
     private readonly IRepository<ReportNote, Guid> _noteRepository;
     private readonly IRepository<Report, Guid> _reportRepository;
+    private readonly IReportHistoryManager _historyManager;
 
-    public ReportNoteAppService(IRepository<ReportNote, Guid> noteRepository, IRepository<Report, Guid> reportRepository)
+    public ReportNoteAppService(IRepository<ReportNote, Guid> noteRepository, IRepository<Report, Guid> reportRepository,
+        IReportHistoryManager historyManager)
     {
         _noteRepository = noteRepository;
         _reportRepository = reportRepository;
+        _historyManager = historyManager;
     }
 
     public async Task<List<ReportNoteDto>> GetNotes(Guid reportId)
@@ -84,6 +87,8 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         await _noteRepository.InsertAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
+        await _historyManager.LogAsync(input.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddNote, input.Text, ReportHistoryVisibility.All);
+
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = user.Id;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
@@ -111,6 +116,8 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         await _noteRepository.UpdateAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
+        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditNote, input.Text, ReportHistoryVisibility.All);
+
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
         dto.CreatorFullName = $"{user.Name} {user.Surname}";
@@ -134,6 +141,8 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         }
 
         await _noteRepository.DeleteAsync(entity);
+
+        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteNote, null, ReportHistoryVisibility.All);
     }
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
