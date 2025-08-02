@@ -473,13 +473,28 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             .Distinct()
             .ToList();
 
-        var reporterNameDict = new Dictionary<long, string>();
-        foreach (var id in reporterIds)
+        var reporterNames = await UserManager.Users
+            .Where(u => reporterIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name, u.Surname })
+            .ToListAsync();
+
+        var reporterDict = reporterNames.ToDictionary(u => u.Id, u => $"{u.Name} {u.Surname}");
+
+
+        var lastNoteAuthorIds = reports
+            .Select(r => r.Notes.OrderByDescending(n => n.CreationTime).FirstOrDefault())
+            .Where(n => n != null && n.CreatorUserId.HasValue)
+            .Select(n => n.CreatorUserId.Value)
+            .Distinct()
+            .ToList();
+
+        var lastNoteAuthorNameDict = new Dictionary<long, string>();
+        foreach (var id in lastNoteAuthorIds)
         {
             var u = await UserManager.FindByIdAsync(id.ToString());
             if (u != null)
             {
-                reporterNameDict[id] = !string.IsNullOrWhiteSpace(u.FullName)
+                lastNoteAuthorNameDict[id] = !string.IsNullOrWhiteSpace(u.FullName)
                     ? u.FullName
                     : u.UserName;
             }
@@ -493,10 +508,17 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             var entity = reportDict[r.Id];
             var lastNote = entity.Notes.OrderByDescending(n => n.CreationTime).FirstOrDefault();
 
-            var reporterName = entity.CreatorUserId.HasValue &&
-                               reporterNameDict.TryGetValue(entity.CreatorUserId.Value, out var name)
+            var reporterName = entity.CreatorUserId.HasValue && reporterDict.TryGetValue(entity.CreatorUserId.Value, out var name)
                 ? name
                 : null;
+
+            string lastNoteAuthorName = null;
+            if (lastNote?.CreatorUserId != null &&
+                lastNoteAuthorNameDict.TryGetValue(lastNote.CreatorUserId.Value, out var lnName))
+            {
+                lastNoteAuthorName = lnName;
+            }
+
 
             dtoList.Add(new ReportWithLastNoteDto
             {
@@ -509,7 +531,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 LastNoteText = lastNote?.Text,
                 LastNoteCreationTime = lastNote?.CreationTime,
                 LastNoteAuthorId = lastNote?.CreatorUserId,
-                ReporterFullName = reporterName,
+                LastNoteAuthorFullName = lastNoteAuthorName,
                 NoteCount = r.NoteCount,
                 Status = r.Status
             });
@@ -517,7 +539,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         return new PagedResultDto<ReportWithLastNoteDto>(baseResult.TotalCount, dtoList);
     }
-
 
 
     [AbpAuthorize]
