@@ -104,7 +104,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         await _commentRepository.InsertAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
-        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddComment, input.Text, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddComment, "افزودن نظر", ReportHistoryVisibility.All);
 
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = user.Id;
@@ -139,7 +139,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         await _commentRepository.UpdateAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
-        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditComment, input.Text, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditComment, "ويرايش نظر", ReportHistoryVisibility.All);
 
         var dto = ObjectMapper.Map<ReportNoteCommentDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
@@ -170,7 +170,7 @@ public class ReportNoteCommentAppService : HodHodAppServiceBase, IReportNoteComm
         }
 
         await _commentRepository.DeleteAsync(entity);
-        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteComment, null, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(note.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteComment, "حذف نظر", ReportHistoryVisibility.All);
     }
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)

@@ -623,9 +623,19 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             ReportStatus.Rejected => "Rejected",
             _ => input.Status.ToString()
         };
+        if (statusDetail.Equals("Approved"))
+        {
+            await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportStatusChange,
+                "تغيير وضعيت به تائيد شده.", ReportHistoryVisibility.All);
+        }
+        else if (statusDetail.Equals("Rejected"))
+        {
+            await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportStatusChange,
+                "تغيير وضعيت به رد شده.", ReportHistoryVisibility.All);
+        }
 
-        await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportStatusChange,
-            statusDetail, ReportHistoryVisibility.All);
+        //await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ReportStatusChange,
+        //    statusDetail, ReportHistoryVisibility.All);
     }
     [AbpAuthorize]
     public async Task ChangeReportCategoryAsync(ChangeReportCategoryDto input)
@@ -662,12 +672,12 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         if (oldCategory?.Id != category.Id)
         {
             var oldName = oldCategory?.Name ?? "";
-            changes.Add($"Category: {oldName} -> {category.Name}");
+            changes.Add($"دسته بندي: {oldName} -> {category.Name}");
         }
         if (oldSubCategory?.Id != subCategory.Id)
         {
             var oldName = oldSubCategory?.Name ?? "";
-            changes.Add($"SubCategory: {oldName} -> {subCategory.Name}");
+            changes.Add($"موضوع: {oldName} -> {subCategory.Name}");
         }
 
         if (changes.Count > 0)
@@ -698,7 +708,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.ArchiveTime = Clock.Now;
         await _reportRepository.UpdateAsync(report);
         await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddToArchive,
-            null, ReportHistoryVisibility.All);
+            "افزودن به آرشيو.", ReportHistoryVisibility.All);
     }
 
     [AbpAuthorize]
@@ -721,7 +731,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
         report.ArchiveTime = null;
         await _reportRepository.UpdateAsync(report);
         await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.RestoreReport,
-            null, ReportHistoryVisibility.All);
+            "بازيابي شد.", ReportHistoryVisibility.All);
     }
 
     [AbpAuthorize]
@@ -743,7 +753,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             report.IsArchived = false;
             report.ArchiveTime = null;
             await _historyManager.LogAsync(report.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.RestoreReport,
-                null, ReportHistoryVisibility.All);
+                "بازيابي از آرشيو.", ReportHistoryVisibility.All);
         }
 
         await CurrentUnitOfWork.SaveChangesAsync();
@@ -798,7 +808,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
             await _historyManager.LogAsync(input.Id, user.Id, $"{user.Name} {user.Surname}",
                 ReportActionType.ChangeIsStarredByCurrentUser,
-                "Starred", visibility);
+                "افزوده شده به علاقه مندي ها", visibility);
         }
     }
 
@@ -823,7 +833,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 visibility |= ReportHistoryVisibility.SuperAdmin | ReportHistoryVisibility.ProvinceAdmin;
             }
             await _historyManager.LogAsync(input.Id, user.Id, $"{user.Name} {user.Surname}", ReportActionType.ChangeIsStarredByCurrentUser,
-                "Unstarred", visibility);
+                "حذف شده از علاقه مندي ها", visibility);
         }
 
     }

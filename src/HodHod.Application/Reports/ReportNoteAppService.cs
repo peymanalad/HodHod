@@ -87,7 +87,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         await _noteRepository.InsertAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
-        await _historyManager.LogAsync(input.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddNote, input.Text, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(input.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.AddNote, "نوشتن يادداشت", ReportHistoryVisibility.All);
 
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = user.Id;
@@ -116,7 +116,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         await _noteRepository.UpdateAsync(entity);
         await CurrentUnitOfWork.SaveChangesAsync();
 
-        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditNote, input.Text, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.EditNote, "ويرايش يادداشت", ReportHistoryVisibility.All);
 
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
@@ -142,7 +142,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
 
         await _noteRepository.DeleteAsync(entity);
 
-        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteNote, null, ReportHistoryVisibility.All);
+        await _historyManager.LogAsync(entity.ReportId, user.Id, $"{user.Name} {user.Surname}", ReportActionType.DeleteNote, "حذف يادداشت", ReportHistoryVisibility.All);
     }
 
     private async Task EnsureReportAccessAsync(Guid reportId, Authorization.Users.User user)
