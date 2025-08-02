@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
@@ -47,7 +46,7 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
         return dto;
     }
 
-    public async Task<List<ReportReferralDto>> GetReferrals(Guid reportId)
+    public async Task<ReportReferralsDto> GetReferrals(Guid reportId)
     {
         var user = await GetCurrentUserAsync();
         await EnsureReportAccessAsync(reportId, user);
@@ -100,7 +99,14 @@ public class ReportReferralAppService : HodHodAppServiceBase, IReportReferralApp
             }
         }
 
-        return dto;
+        var result = new ReportReferralsDto
+        {
+            All = dto,
+            Inbox = dto.Where(r => r.ReceiverUserId == user.Id).ToList(),
+            Outbox = dto.Where(r => r.SenderUserId == user.Id).ToList()
+        };
+
+        return result;
     }
 
     public async Task<ReportAssignableUsersDto> GetAssignableUsers(Guid reportId)

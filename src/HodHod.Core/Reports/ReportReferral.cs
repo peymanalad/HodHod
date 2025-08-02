@@ -21,12 +21,11 @@ public class ReportReferral : FullAuditedEntity<Guid>
     [Required]
     [StringLength(2000)]
     public string Text { get; set; }
- 
+
     public Guid? ParentId { get; set; }
 
     [ForeignKey(nameof(ParentId))]
     public ReportReferral Parent { get; set; }
-
 
     public ICollection<ReportReferral> Replies { get; set; }
 

@@ -10,6 +10,6 @@ namespace HodHod.Reports;
 public interface IReportReferralAppService : IApplicationService
 {
     Task<ReportReferralDto> CreateAsync(CreateReportReferralDto input);
-    Task<List<ReportReferralDto>> GetReferrals(Guid reportId);
+    Task<ReportReferralsDto> GetReferrals(Guid reportId);
     Task<ReportAssignableUsersDto> GetAssignableUsers(Guid reportId);
 }
