@@ -480,7 +480,6 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
 
         var reporterDict = reporterNames.ToDictionary(u => u.Id, u => $"{u.Name} {u.Surname}");
 
-
         var lastNoteAuthorIds = reports
             .Select(r => r.Notes.OrderByDescending(n => n.CreationTime).FirstOrDefault())
             .Where(n => n != null && n.CreatorUserId.HasValue)
@@ -500,6 +499,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             }
         }
 
+
         var reportDict = reports.ToDictionary(r => r.Id);
 
         var dtoList = new List<ReportWithLastNoteDto>();
@@ -511,6 +511,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
             var reporterName = entity.CreatorUserId.HasValue && reporterDict.TryGetValue(entity.CreatorUserId.Value, out var name)
                 ? name
                 : null;
+
 
             string lastNoteAuthorName = null;
             if (lastNote?.CreatorUserId != null &&
@@ -530,6 +531,7 @@ public class ReportAppService : HodHodAppServiceBase, IReportAppService
                 SubCategoryName = r.SubCategoryName,
                 LastNoteText = lastNote?.Text,
                 LastNoteCreationTime = lastNote?.CreationTime,
+                ReportCreationTime = entity.CreationTime,
                 LastNoteAuthorId = lastNote?.CreatorUserId,
                 LastNoteAuthorFullName = lastNoteAuthorName,
                 NoteCount = r.NoteCount,

@@ -13,6 +13,7 @@ public class ReportWithLastNoteDto : EntityDto<Guid>
     public string SubCategoryName { get; set; }
     public string LastNoteText { get; set; }
     public DateTime? LastNoteCreationTime { get; set; }
+    public DateTime ReportCreationTime { get; set; }
     public long? LastNoteAuthorId { get; set; }
     //public string ReporterFullName { get; set; }
     public string LastNoteAuthorFullName { get; set; }
