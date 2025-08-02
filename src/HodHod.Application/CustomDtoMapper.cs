@@ -238,11 +238,7 @@ internal static class CustomDtoMapper
             .ForMember(d => d.ReceiverUserId, opt => opt.MapFrom(s => s.ToUserId))
             .ForMember(d => d.SenderFullName, opt => opt.Ignore())
             .ForMember(d => d.ReceiverFullName, opt => opt.Ignore());
-        configuration.CreateMap<ReportReferral, ReportReferralDto>()
-            .ForMember(d => d.SenderUserId, opt => opt.MapFrom(s => s.FromUserId))
-            .ForMember(d => d.ReceiverUserId, opt => opt.MapFrom(s => s.ToUserId))
-            .ForMember(d => d.SenderUserName, opt => opt.Ignore())
-            .ForMember(d => d.ReceiverUserName, opt => opt.Ignore());
+
 
         configuration.CreateMap<CreateReportNoteCommentDto, ReportNoteComment>();
         configuration.CreateMap<UpdateReportNoteCommentDto, ReportNoteComment>();

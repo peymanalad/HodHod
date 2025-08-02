@@ -57,7 +57,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
         {
             if (n.CreatorUserId.HasValue && userDict.TryGetValue(n.CreatorUserId.Value, out var name))
             {
-                n.CreatorUserName = name;
+                n.CreatorFullName = name;
             }
         }
 
@@ -76,7 +76,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
 
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = user.Id;
-        dto.CreatorUserName = user.UserName;
+        dto.CreatorFullName = $"{user.Name} {user.Surname}";
         dto.CreationTime = entity.CreationTime;
         return dto;
     }
@@ -102,7 +102,7 @@ public class ReportNoteAppService : HodHodAppServiceBase, IReportNoteAppService
 
         var dto = ObjectMapper.Map<ReportNoteDto>(entity);
         dto.CreatorUserId = entity.CreatorUserId;
-        dto.CreatorUserName = user.UserName;
+        dto.CreatorFullName = $"{user.Name} {user.Surname}";
         return dto;
     }
 
